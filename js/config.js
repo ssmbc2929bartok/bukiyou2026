@@ -14,7 +14,7 @@
 
     // GAS ウェブアプリの URL（gas/Code.gs をデプロイしたときの「ウェブアプリ URL」）。
     // 空のときはデータを送らずに結果だけ表示する（動作確認用）。
-    gasUrl: '',
+    gasUrl: 'https://script.google.com/a/macros/oit.ac.jp/s/AKfycbxs9fiW58sYdZpfho5LrctM9TZ_m9u5SuUAD8qNRAsmYr3MCGASi7CLtpuXcpD8kU6tvA/exec',
 
     // この回に参加する企業の id（js/data/companies.js）。空の配列なら全社を対象にする。
     companyIds: [],
