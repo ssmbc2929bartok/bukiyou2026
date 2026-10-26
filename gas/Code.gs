@@ -13,7 +13,10 @@
  * シート
  *   回答       … 1回の診断が1行（R-001 の元データ）
  *   企業集計   … 開催回 × 企業ごとの「診断結果になった回数」「気になる企業に選ばれた回数」
- *   回答集計   … 開催回 × 質問 × 選択肢ごとの回数（回答のばらつき・かたよりの確認用）
+ *                「結果画面からページを開いた回数」
+ *   回答集計   … 開催回 × 質問 × 選択肢ごとの回数（回答のばらつき・かたよりの確認用）。
+ *                年れい・実験条件（A/B）・出たゲームの回数も数える
+ *   リンク     … 結果画面の「もっと見る」を押した記録
  *   エラー     … アプリから送られてきた送信エラーの記録
  */
 
@@ -21,9 +24,11 @@ const SHEET_RESULTS = '回答';
 const SHEET_COMPANY = '企業集計';
 const SHEET_ANSWER = '回答集計';
 const SHEET_ERRORS = 'エラー';
+const SHEET_LINKS = 'リンク';
 
-const COMPANY_HEADERS = ['開催回', '企業', '診断結果になった回数', '気になる企業に選ばれた回数'];
+const COMPANY_HEADERS = ['開催回', '企業', '診断結果になった回数', '気になる企業に選ばれた回数', 'ページを開いた回数'];
 const ANSWER_HEADERS = ['開催回', '質問', '選択肢', '回数'];
+const LINK_HEADERS = ['受信日時', '開催回', 'sessionId', '企業', 'URL'];
 const ERROR_HEADERS = ['受信日時', '開催回', 'アプリ版', '発生日時', 'sessionId', '1回目', '2回目', 'オンライン'];
 
 const MAX_BODY_LENGTH = 20000;
@@ -38,6 +43,7 @@ function doPost(e) {
     const data = JSON.parse(body);
     if (data.kind === 'result') return output(saveResult(data));
     if (data.kind === 'error') return output(saveErrors(data));
+    if (data.kind === 'click') return output(saveClick(data));
     return output({ ok: false, error: 'unknown kind' });
   } catch (err) {
     notifyAdmin('受信中にエラーが起きました', String((err && err.stack) || err));
@@ -85,12 +91,34 @@ function saveResult(data) {
       .filter(function (key) { return key.indexOf('a_') === 0; })
       .map(function (key) { return { key: [eventId, key.slice(2), row[key]], column: 3 }; });
     answerCounts.push({ key: [eventId, 'age', row.age], column: 3 });
+    if (row.condition) answerCounts.push({ key: [eventId, 'condition', row.condition], column: 3 });
+    String(row.games || '').split(',').filter(String).forEach(function (id) {
+      answerCounts.push({ key: [eventId, 'game', id], column: 3 });
+    });
     increment(getSheet(SHEET_ANSWER, ANSWER_HEADERS), 3, answerCounts);
   } finally {
     lock.releaseLock();
   }
 
   cache.put('session_' + sessionId, '1', DUPLICATE_SECONDS);
+  return { ok: true };
+}
+
+// ------------------------------------------------------------------ 結果画面のリンク
+
+function saveClick(data) {
+  const sessionId = String(data.sessionId || '');
+  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return { ok: false, error: 'bad sessionId' };
+  const company = cleanKey(data.company);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sheet = getSheet(SHEET_LINKS, LINK_HEADERS);
+    sheet.appendRow([new Date(), cleanValue(data.eventId), sessionId, company, cleanValue(data.url)]);
+    increment(getSheet(SHEET_COMPANY, COMPANY_HEADERS), 2, [{ key: [cleanValue(data.eventId), company], column: 4 }]);
+  } finally {
+    lock.releaseLock();
+  }
   return { ok: true };
 }
 
@@ -148,6 +176,10 @@ function getSheet(name, headers) {
   if (headers && sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
+  } else if (headers && sheet.getLastColumn() < headers.length) {
+    // 前の版で作ったシートに、あとから足した見出しを付け足す
+    const have = sheet.getLastColumn();
+    sheet.getRange(1, have + 1, 1, headers.length - have).setValues([headers.slice(have)]);
   }
   return sheet;
 }
@@ -215,4 +247,5 @@ function setup() {
   getSheet(SHEET_COMPANY, COMPANY_HEADERS);
   getSheet(SHEET_ANSWER, ANSWER_HEADERS);
   getSheet(SHEET_ERRORS, ERROR_HEADERS);
+  getSheet(SHEET_LINKS, LINK_HEADERS);
 }

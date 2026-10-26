@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/games.css">
 </head>
 <body data-bg="akari">
 
@@ -95,6 +96,32 @@
       </div>
     </section>
 
+    <!-- ミニゲーム（docs/games.md） -->
+    <section id="screen-game" class="screen" data-bg="sky" hidden aria-labelledby="game-title">
+      <div class="survey game-card">
+        <div class="game-intro" id="game-intro">
+          <p class="game-label">ミニゲーム</p>
+          <div class="game-icon" id="game-icon" aria-hidden="true"></div>
+          <h1 id="game-title"></h1>
+          <p class="game-company" id="game-company"></p>
+          <p class="game-howto" id="game-howto"></p>
+          <div class="game-hand" aria-hidden="true">👆</div>
+          <button type="button" class="submit" id="game-start">はじめる！</button>
+        </div>
+        <div class="game-play" id="game-play" hidden>
+          <div class="game-top">
+            <div class="game-timer" aria-hidden="true"><div class="game-timer-bar" id="game-timer-bar"></div></div>
+            <button type="button" class="game-skip" id="game-skip">とばす</button>
+          </div>
+          <div class="game-stage" id="game-stage"></div>
+        </div>
+        <div class="game-done" id="game-done" hidden>
+          <div class="game-done-emoji" aria-hidden="true">🌟</div>
+          <p id="game-done-text">すごい！</p>
+        </div>
+      </div>
+    </section>
+
     <!-- S-004 結果表示画面 -->
     <section id="screen-result" class="screen" data-bg="akari" hidden aria-labelledby="result-title">
       <div class="card result-card">
@@ -112,6 +139,7 @@
           <h2 class="company-name" id="result-company-name"></h2>
           <p class="company-desc" id="result-company-desc"></p>
           <p class="company-adult" id="result-company-adult"></p>
+          <a class="link-button" id="result-link" href="#" target="_blank" rel="noopener">この かいしゃを もっと <ruby>見<rt>み</rt></ruby>る ↗</a>
           <div class="reasons">
             <p class="reasons-title">ここが にてるよ！</p>
             <ul class="reason-list" id="result-reasons"></ul>
@@ -163,9 +191,27 @@
   <script src="js/data/questions.js"></script>
   <script src="js/data/types.js"></script>
   <script src="js/data/companies.js"></script>
+  <script src="js/data/games.js"></script>
+  <script src="js/data/crossword.js"></script>
+  <script src="js/data/circuit.js"></script>
+  <script src="js/data/memory.js"></script>
   <script src="js/util.js"></script>
   <script src="js/diagnosis.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/games/core.js"></script>
+  <script src="js/games/screw.js"></script>
+  <script src="js/games/crossword.js"></script>
+  <script src="js/games/memory.js"></script>
+  <script src="js/games/trace.js"></script>
+  <script src="js/games/paint.js"></script>
+  <script src="js/games/cream.js"></script>
+  <script src="js/games/heat.js"></script>
+  <script src="js/games/circuit.js"></script>
+  <script src="js/games/stone.js"></script>
+  <script src="js/games/ball.js"></script>
+  <script src="js/games/robot.js"></script>
+  <script src="js/games/jump.js"></script>
+  <script src="js/games/bounce.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

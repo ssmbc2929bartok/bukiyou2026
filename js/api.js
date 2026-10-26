@@ -65,6 +65,26 @@
       return post(Object.assign({ kind: 'result' }, payload));
     },
 
+    // 結果画面の「もっと見る」を押したことを送る。ページを移るので結果は待たない
+    sendClick: function (info) {
+      if (!this.enabled()) return;
+      const body = Object.assign({
+        kind: 'click',
+        eventId: BKF.config.eventId,
+        appVersion: BKF.config.appVersion,
+      }, info);
+      try {
+        fetch(BKF.config.gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(body),
+          keepalive: true,
+        }).catch(function () { /* 記録できなくても続ける */ });
+      } catch (e) {
+        // 古いブラウザなど
+      }
+    },
+
     // 送れなかったことを記録する（回答の中身は残さない）
     recordError: function (info) {
       const list = readErrors();
