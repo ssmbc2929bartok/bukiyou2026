@@ -1,8 +1,9 @@
 /*
  * 画面の流れ
- *   S-001 トップ → S-002 質問（年れい → 20問 → 気になる企業）→ S-003 回答確認
+ *   S-001 トップ → S-002 質問（年れい → 10問（あいだにミニゲーム）→ 気になる企業）→ S-003 回答確認
  *   → F-002 診断 → F-003 送信 → S-004 結果 → S-001 に戻る
  *   S-005 未記入ポップアップ / S-006 データ送信エラー
+ * ミニゲームの数は条件 A/B でちがう（docs/games.md）。年れいを答えたときに、出すゲームを決める。
  */
 (function (root) {
   'use strict';
@@ -21,11 +22,20 @@
   const questions = D.activeQuestions();
   const companies = D.activeCompanies();
 
-  // 質問画面で順に出すもの
-  const steps = [{ kind: 'age' }]
-    .concat(questions.map(function (q) { return { kind: 'question', question: q }; }))
-    .concat([{ kind: 'interest' }]);
+  // 質問画面で順に出すもの。slots: [{ after: 何問目のあと, id: ゲーム }]
+  function buildSteps(slots) {
+    const list = [{ kind: 'age' }];
+    questions.forEach(function (q, i) {
+      list.push({ kind: 'question', question: q });
+      slots.forEach(function (slot) {
+        if (slot.after === i + 1) list.push({ kind: 'game', gameId: slot.id, result: null });
+      });
+    });
+    list.push({ kind: 'interest' });
+    return list;
+  }
 
+  let steps = buildSteps([]);
   let state;
 
   function resetState() {
@@ -38,7 +48,21 @@
       interest: null,
       pending: null,
       returnToConfirm: false,
+      condition: Math.random() < 0.5 ? 'A' : 'B',
+      tier: null,
+      games: [],      // 遊んだゲームの結果（遊んだ順）
+      replaced: {},   // 傾きが使えず変えたゲーム { もとの id: 変えた先の id }
     };
+    steps = buildSteps([]);
+  }
+
+  // 年れいから難易度を決め、出すゲームを選ぶ（まだゲームを遊んでいないときだけ）
+  function planGames() {
+    if (state.games.length > 0) return;
+    state.tier = BKF.tierOf(state.age);
+    const after = BKF.config.gameConditions[state.condition].after;
+    const ids = BKF.games.choose(state.tier, after.length);
+    steps = buildSteps(ids.map(function (id, i) { return { after: after[i], id: id }; }));
   }
 
   // ---------------------------------------------------------------- 画面切り替え
@@ -129,8 +153,42 @@
     };
   }
 
+  // ---------------------------------------------------------------- ミニゲーム
+
+  function runGame(step) {
+    show('screen-game');
+    BKF.games.run(step.gameId, state.tier).then(function (res) {
+      if (res.unavailable) {
+        // 傾きが使えない端末 → まだ出していないゲームに変える
+        const planned = steps.filter(function (s) { return s.kind === 'game'; }).map(function (s) { return s.gameId; });
+        const alt = BKF.games.choose(state.tier, 1, planned.concat(Object.keys(state.replaced)))[0];
+        state.replaced[step.gameId] = alt || '';
+        if (alt) {
+          step.gameId = alt;
+          runGame(step);
+          return;
+        }
+        res = { id: step.gameId, tier: state.tier, metrics: {}, skipped: true, reason: 'unavailable' };
+      }
+      step.result = res;
+      state.games.push(res);
+      state.stepIndex++;
+      renderStep('next');
+    });
+  }
+
   function renderStep(direction) {
     const step = steps[state.stepIndex];
+    if (step.kind === 'game') {
+      // 遊んだゲームはもう一度は出さない（もどるときは飛ばす）
+      if (step.result) {
+        state.stepIndex += direction === 'back' ? -1 : 1;
+        renderStep(direction);
+      } else {
+        runGame(step);
+      }
+      return;
+    }
     const view = stepView(step);
     state.pending = view.saved === undefined ? null : view.saved;
 
@@ -197,8 +255,10 @@
       return;
     }
     const step = steps[state.stepIndex];
-    if (step.kind === 'age') state.age = state.pending;
-    else if (step.kind === 'interest') state.interest = state.pending;
+    if (step.kind === 'age') {
+      state.age = state.pending;
+      planGames();
+    } else if (step.kind === 'interest') state.interest = state.pending;
     else state.answers[step.question.id] = state.pending;
 
     if (state.returnToConfirm || state.stepIndex === steps.length - 1) {
@@ -218,6 +278,7 @@
     }
     if (state.stepIndex === 0) return;
     state.stepIndex--;
+    while (state.stepIndex > 0 && steps[state.stepIndex].kind === 'game') state.stepIndex--;
     renderStep('back');
   }
 
@@ -233,6 +294,7 @@
     const list = $('confirm-list');
     list.innerHTML = '';
     steps.forEach(function (step, i) {
+      if (step.kind === 'game') return;
       const view = stepView(step);
       const choice = answerLabel(step);
       const li = doc.createElement('li');
@@ -293,6 +355,27 @@
     ranking.forEach(function (r) {
       payload['s_' + r.item.id] = round(r.score, 4);
     });
+
+    // ミニゲーム（g_<ゲームid>_<値>）
+    payload.condition = state.condition;
+    payload.tier = state.tier;
+    payload.games = state.games.map(function (g) { return g.id; }).join(',');
+    state.games.forEach(function (g) {
+      const p = 'g_' + g.id + '_';
+      Object.keys(g.metrics || {}).forEach(function (k) {
+        const v = g.metrics[k];
+        payload[p + k] = typeof v === 'number' ? round(v, 4) : v;
+      });
+      payload[p + 'skipped'] = g.skipped ? 1 : 0;
+      payload[p + 'ms'] = g.ms;
+      payload[p + 'first'] = g.firstTouchMs;
+      payload[p + 'taps'] = g.taps;
+      payload[p + 'reason'] = g.reason;
+    });
+    Object.keys(state.replaced).forEach(function (id) {
+      payload['g_' + id + '_replaced'] = state.replaced[id];
+    });
+    payload.screen = root.innerWidth + 'x' + root.innerHeight;
     return payload;
   }
 
@@ -346,7 +429,7 @@
     $('confirm-submit').disabled = true;
     $('loading').hidden = false;
 
-    const result = D.diagnose(state.answers);
+    const result = D.diagnose(state.answers, state.games);
     const payload = buildPayload(result);
     Promise.all([sendWithRetry(payload), U.wait(MIN_LOADING_MS)]).then(function () {
       $('loading').hidden = true;
@@ -368,6 +451,13 @@
     $('result-company-name').textContent = company.short;
     $('result-company-desc').innerHTML = U.rubyHtml(company.desc);
     $('result-company-adult').textContent = company.name + '｜' + company.adult;
+
+    // 「もっと見る」：公式サイト（なければトレーディングカードのページ）を新しいタブで開き、開いたことを記録する
+    const link = $('result-link');
+    link.href = company.url || BKF.tradingCardUrl;
+    link.onclick = function () {
+      BKF.api.sendClick({ sessionId: payload.sessionId, company: company.id, url: link.href });
+    };
 
     const reasons = $('result-reasons');
     reasons.innerHTML = '';
@@ -393,6 +483,8 @@
     if (DEBUG) {
       debug.textContent =
         'u = [' + result.vector.map(function (x) { return x.toFixed(2); }).join(', ') + ']\n' +
+        'ゲーム = [' + D.gameVector(state.games).map(function (x) { return x.toFixed(2); }).join(', ') + ']\n' +
+        '条件 ' + state.condition + ' / 難易度 ' + state.tier + ' / ' + (payload.games || '-') + '\n' +
         'fallback = ' + (result.fallback || '-') + '\n\n企業\n' +
         result.companyRanking.map(function (r) { return r.score.toFixed(3) + '  ' + r.item.short; }).join('\n') +
         '\n\nタイプ\n' +
@@ -433,7 +525,7 @@
     show('screen-top');
   }
 
-  $('top-note').innerHTML = questions.length + 'この しつもんに こたえてね<br>（やく ' + Math.max(1, Math.round(questions.length * 15 / 60)) + 'ふん）';
+  $('top-note').innerHTML = 'しつもんと ミニゲームに こたえてね<br>（やく 3〜5ふん）';
   $('start-button').addEventListener('click', start);
   $('q-submit').addEventListener('click', submitStep);
   $('q-back').addEventListener('click', function () {
@@ -452,4 +544,22 @@
   resetState();
   BKF.api.flushErrors();
   if (DEBUG) root.BKF.state = function () { return state; };
+
+  // 確認用：?debug&play=ゲームid&tier=0〜2 で、そのゲームだけを遊ぶ（データは送らない）
+  const params = new URLSearchParams(root.location.search);
+  if (DEBUG && params.get('play')) {
+    const id = params.get('play');
+    const tier = Number(params.get('tier') || 1);
+    show('screen-game');
+    BKF.games.run(id, tier).then(function (res) {
+      const vec = BKF.gameScore(id, tier, res.metrics);
+      const box = doc.createElement('pre');
+      box.className = 'debug';
+      box.textContent = JSON.stringify(res, null, 1) + '\n\n軸への点数\n' +
+        BKF.axes.map(function (a, i) { return a.label + ' ' + vec[i].toFixed(2); }).filter(function (s, i) { return vec[i] !== 0; }).join('\n');
+      $('game-done').appendChild(box);
+      $('game-done').hidden = false;
+      root.BKF.lastGame = res;
+    });
+  }
 })(window);

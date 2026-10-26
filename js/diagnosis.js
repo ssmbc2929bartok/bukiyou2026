@@ -2,6 +2,7 @@
  * F-002 診断結果演算機能（線形モデル + コサイン類似度）
  *
  *   u = Σ w'_ij            … 質問 i で選択肢 j を選んだときの効果ベクトルを足していく
+ *     + Σ g_k              … ミニゲーム k の結果を軸に直したもの（js/data/games.js の gameScore）
  *   cos(u, t_k) = u·t_k / (|u||t_k|)
  *   いちばん cos が大きい性格タイプ・企業を結果にする
  *
@@ -146,12 +147,26 @@
       .slice(0, count);
   }
 
-  function diagnose(answers) {
+  /*
+   * ミニゲームの結果を足したベクトル（js/data/games.js の gameScore）
+   * games: [{ id, tier, metrics, skipped }] … とばしたゲームは足さない
+   */
+  function gameVector(games) {
+    let v = zeros();
+    (games || []).forEach(function (g) {
+      if (g.skipped || !BKF.gameScore) return;
+      v = add(v, BKF.gameScore(g.id, g.tier, g.metrics));
+    });
+    return v;
+  }
+
+  function diagnose(answers, games) {
     const uv = userVector(answers);
-    let u = uv.centered;
+    const gv = gameVector(games);
+    let u = add(uv.centered, gv);
     let fallback = '';
     if (norm(u) < EPS) {
-      u = uv.raw;
+      u = add(uv.raw, gv);
       fallback = 'raw';
     }
     if (norm(u) < EPS) {
@@ -180,6 +195,7 @@
     activeQuestions: activeQuestions,
     activeCompanies: activeCompanies,
     userVector: userVector,
+    gameVector: gameVector,
     rank: rank,
     reasons: reasons,
     diagnose: diagnose,

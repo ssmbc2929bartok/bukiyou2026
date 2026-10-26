@@ -2,8 +2,9 @@
  * 判定のかたよりを調べるシミュレーション
  *   node tools/simulate.js [人数=100000] [「どれでもない」を選ぶ確率=0.1]
  *
- * 1. ランダムに回答したとき、各企業・各タイプが何%出るか
- * 2. 各企業について「その企業になれる回答」があるか（なりやすい選択肢を順に選んで確かめる）
+ * 1. ランダムに回答したとき、各企業・各タイプが何%出るか（条件 A / B ごと）
+ *    ミニゲームの値は、js/data/games.js の“ふつう”の値のまわりにランダムに作る
+ * 2. 各企業について「その企業になれる回答」があるか（質問だけで、なりやすい選択肢を順に選んで確かめる）
  * 質問数が多いと全パターンの総当たりはできないので、ランダムに回答を作って調べる。
  */
 'use strict';
@@ -17,6 +18,7 @@ const files = [
   'js/data/questions.js',
   'js/data/types.js',
   'js/data/companies.js',
+  'js/data/games.js',
   'js/diagnosis.js',
 ];
 files.forEach(function (f) {
@@ -30,6 +32,25 @@ const N = Number(process.argv[2]) || 100000;
 const NONE_RATE = process.argv[3] !== undefined ? Number(process.argv[3]) : 0.1;
 const questions = D.activeQuestions();
 const companies = D.activeCompanies();
+
+// 標準正規分布の乱数
+function gauss() {
+  return Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+}
+
+// 条件に合わせてゲームを選び、値をランダムに作る
+function randomGames(condition, tier) {
+  const n = BKF.config.gameConditions[condition].after.length;
+  const ids = BKF.playableGames(tier).sort(function () { return Math.random() - 0.5; }).slice(0, n);
+  return ids.map(function (id) {
+    const metrics = {};
+    Object.keys(BKF.gameDefs[id].metrics).forEach(function (k) {
+      const base = BKF.gameDefs[id].metrics[k].base[tier];
+      metrics[k] = Math.max(0, base[0] + base[1] * gauss());
+    });
+    return { id: id, tier: tier, metrics: metrics, skipped: false };
+  });
+}
 
 function randomAnswers() {
   const answers = {};
@@ -61,24 +82,28 @@ function report(title, items, counts) {
   });
 }
 
-const companyCounts = {};
-const typeCounts = {};
 let fallbackCount = 0;
 let fewReasonCount = 0;
-for (let n = 0; n < N; n++) {
-  const r = D.diagnose(randomAnswers());
-  if (r.reasons.length < 2) fewReasonCount++;
-  companyCounts[r.company.id] = (companyCounts[r.company.id] || 0) + 1;
-  typeCounts[r.type.id] = (typeCounts[r.type.id] || 0) + 1;
-  if (r.fallback) fallbackCount++;
-}
-
 console.log('質問 ' + questions.length + '問 / 企業 ' + companies.length + '社 / タイプ ' + BKF.types.length + '種');
-console.log('ランダム回答 ' + N + '人（どれでもない ' + NONE_RATE * 100 + '%）');
-report('企業（均等なら ' + (100 / companies.length).toFixed(1) + '%）', companies, companyCounts);
-report('性格タイプ（均等なら ' + (100 / BKF.types.length).toFixed(1) + '%）', BKF.types, typeCounts);
-console.log('\nu が 0 になって予備の判定を使った回数: ' + fallbackCount);
-console.log('「にている ところ」が1つ以下になった割合: ' + (fewReasonCount / N * 100).toFixed(1) + '%');
+console.log('ランダム回答 ' + N + '人ずつ（どれでもない ' + NONE_RATE * 100 + '%、難易度はランダム）');
+['A', 'B'].forEach(function (condition) {
+  const companyCounts = {};
+  const typeCounts = {};
+  for (let n = 0; n < N; n++) {
+    const tier = Math.floor(Math.random() * 3);
+    const r = D.diagnose(randomAnswers(), randomGames(condition, tier));
+    if (r.reasons.length < 2) fewReasonCount++;
+    companyCounts[r.company.id] = (companyCounts[r.company.id] || 0) + 1;
+    typeCounts[r.type.id] = (typeCounts[r.type.id] || 0) + 1;
+    if (r.fallback) fallbackCount++;
+  }
+  const games = BKF.config.gameConditions[condition].after.length;
+  report('条件' + condition + '（ゲーム' + games + 'つ）の企業（均等なら ' + (100 / companies.length).toFixed(1) + '%）', companies, companyCounts);
+  report('条件' + condition + '（ゲーム' + games + 'つ）の性格タイプ（均等なら ' + (100 / BKF.types.length).toFixed(1) + '%）', BKF.types, typeCounts);
+});
+console.log('');
+console.log('u が 0 になって予備の判定を使った回数: ' + fallbackCount);
+console.log('「にている ところ」が1つ以下になった割合: ' + (fewReasonCount / N / 2 * 100).toFixed(1) + '%');
 
 // その企業（タイプ）とのコサイン類似度が上がる選択肢を、質問ごとに選び直していく
 function bestAnswersFor(target, items) {
@@ -114,6 +139,6 @@ function reachability(title, items, key) {
   return ok;
 }
 
-const okCompanies = reachability('その企業になれる回答があるか', companies, 'company');
-const okTypes = reachability('そのタイプになれる回答があるか', BKF.types, 'type');
+const okCompanies = reachability('その企業になれる回答があるか（質問だけで）', companies, 'company');
+const okTypes = reachability('そのタイプになれる回答があるか（質問だけで）', BKF.types, 'type');
 if (!okCompanies || !okTypes) process.exitCode = 1;
