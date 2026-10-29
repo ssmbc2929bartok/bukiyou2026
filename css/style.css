@@ -1169,3 +1169,233 @@ h1[tabindex="-1"]:focus {
   font-weight: 500;
   color: #a89888;
 }
+/* ==========================================================================
+   画面の高さに合わせる（v2.1.1）
+   小さいスマホでもスクロールしなくても、質問と「これに きめた！」が1画面に収まるようにする。
+   選択肢のカードは残った高さに合わせて縮む（大きい画面では今までどおりの大きさまで）。
+   ========================================================================== */
+
+#screen-question .survey {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 44px);
+  height: calc(100dvh - 44px);
+  max-height: 860px;
+  padding: 14px 16px 16px;
+}
+
+#screen-question .survey-top,
+#screen-question .progress,
+#screen-question .header,
+#screen-question .message,
+#screen-question .submit {
+  flex: 0 0 auto;
+}
+
+#screen-question .header {
+  margin: 6px 0 10px;
+}
+
+#screen-question .star {
+  font-size: clamp(24px, 5vh, 45px);
+}
+
+#screen-question .header h1 {
+  margin: 2px 0;
+  font-size: clamp(20px, min(6vw, 4.2vh), 31px);
+  line-height: 1.6;
+}
+
+#screen-question .header p {
+  font-size: clamp(13px, 2.2vh, 16px);
+  line-height: 1.6;
+}
+
+#screen-question .choices {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-auto-rows: minmax(0, 175px);
+  align-content: center;
+}
+
+#screen-question .choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 6px 4px;
+  overflow: hidden;
+}
+
+/* ✔ がカードの外にはみ出して切れないように、カードの内側に出す */
+#screen-question .choice.selected::after {
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  font-size: 15px;
+  line-height: 28px;
+}
+
+#screen-question .number {
+  flex: 0 0 auto;
+  width: clamp(24px, 4.5vh, 36px);
+  height: clamp(24px, 4.5vh, 36px);
+  margin-bottom: 2px;
+  font-size: clamp(15px, 2.6vh, 21px);
+}
+
+#screen-question .text {
+  font-size: clamp(12px, 2.1vh, 15px);
+  line-height: 1.5;
+}
+
+#screen-question .picture {
+  margin-top: 2px;
+  font-size: clamp(24px, 6vh, 48px);
+}
+
+#screen-question .choice-other.wide {
+  flex-direction: row;
+  min-height: 0;
+}
+
+#screen-question .choice-other.wide .picture {
+  font-size: clamp(22px, 4.5vh, 36px);
+}
+
+/* 年れい */
+#screen-question .choices.compact {
+  grid-auto-rows: minmax(0, 84px);
+}
+
+#screen-question .choices.compact .text {
+  font-size: clamp(14px, 2.6vh, 18px);
+  line-height: 1.3;
+}
+
+/* 気になる企業（18社＋「まだ わからない」） */
+#screen-question .choices.companies {
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(0, 76px);
+  gap: 6px;
+}
+
+#screen-question .choices.companies .choice {
+  padding: 3px 2px;
+  border-radius: 14px;
+}
+
+#screen-question .choices.companies .picture {
+  margin: 0;
+  font-size: clamp(16px, 3.2vh, 30px);
+}
+
+#screen-question .choices.companies .text {
+  font-size: clamp(10px, 1.7vh, 13px);
+  line-height: 1.3;
+}
+
+#screen-question .message {
+  min-height: 1.4em;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+#screen-question .submit {
+  min-height: 54px;
+}
+
+/* 回答確認：「けっかを 見る！」を画面の下に固定して、一覧をスクロールしなくても押せるようにする */
+#confirm-submit {
+  position: sticky;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 2;
+}
+
+/* トップ：縦が短い画面でも「はじめる！」が最初から見えるように詰める */
+@media (max-height: 700px) {
+  .top-card {
+    margin-top: 0;
+    padding-top: 18px;
+  }
+  .top-icons {
+    margin: 10px 0 2px;
+    font-size: 30px;
+  }
+  .top-title {
+    font-size: clamp(38px, 10vh, 68px);
+  }
+  .top-lead {
+    margin-top: 2px;
+    font-size: 22px;
+  }
+  .top-sub {
+    margin: 10px 0 14px;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+  .start-button {
+    min-height: 60px;
+    font-size: 26px;
+  }
+  .top-note {
+    margin-top: 10px;
+  }
+}
+/* 気になる企業は数が多いので、入りきらないときだけ一覧の中でスクロールする（「これに きめた！」は常に見える） */
+#screen-question .choices.companies {
+  overflow-y: auto;
+  align-content: start;
+}
+
+/* スマホの高さ（ブラウザのバーを除いて 860px 以下）：飾りを隠して、選択肢のカードを大きく取る */
+@media (max-height: 860px) {
+  #app {
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  #screen-question .survey {
+    height: calc(100vh - 18px);
+    height: calc(100dvh - 18px);
+    padding: 10px 12px 12px;
+  }
+  #screen-question .survey-top {
+    min-height: 32px;
+  }
+  #screen-question .back-button {
+    min-height: 32px;
+  }
+  #screen-question .progress {
+    margin: 6px 0 2px;
+  }
+  #screen-question .header {
+    margin: 4px 0 8px;
+  }
+  /* 星・番号・「ひとつ えらぼう！」は、なくても分かるので隠す（番号は色で区別できる） */
+  #screen-question .star,
+  #screen-question .number,
+  #screen-question .message {
+    display: none;
+  }
+  #screen-question .submit {
+    margin-top: 8px;
+  }
+  #screen-question .choices.companies {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+  }
+  #screen-question .choices.companies .choice {
+    min-height: 44px;
+    border-width: 3px;
+  }
+  #screen-question .choices.companies .picture {
+    font-size: 15px;
+    line-height: 1;
+  }
+  #screen-question .choices.companies .text {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+}

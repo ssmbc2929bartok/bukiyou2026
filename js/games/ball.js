@@ -21,8 +21,11 @@
   function tiltDemo(box, small) {
     box.innerHTML =
       '<div class="tilt-demo' + (small ? ' small' : '') + '">' +
+      '<div class="tilt-note">スマホは たての まま</div>' +
       '<div class="tilt-phone"><div class="tilt-floor"></div><div class="tilt-ball"></div></div>' +
-      '<div class="tilt-labels"><span>← ひだりに かたむける</span><span>みぎに かたむける →</span></div>' +
+      (small
+        ? '<div class="tilt-labels"><span>← ひだり</span><span>みぎ →</span></div>'
+        : '<div class="tilt-labels"><span>← ひだりに かたむける</span><span>みぎに かたむける →</span></div>') +
       '</div>';
   }
 
@@ -39,7 +42,7 @@
       canvas.height = H * dpr;
       const g = canvas.getContext('2d');
       g.scale(dpr, dpr);
-      const msg = ctx.el('div', 'game-msg', null, 'スマホを かたむけてね');
+      const msg = ctx.el('div', 'game-msg', null, 'たての まま かたむけてね');
       // 最初のうちは、傾け方のアニメーションを出しておく（ボールが動いたら消す）
       const hint = ctx.el('div', 'ball-hint');
       tiltDemo(hint, true);

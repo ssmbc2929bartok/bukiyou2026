@@ -114,7 +114,7 @@
     },
     ball: {
       title: 'ボールころがし', company: 'サンエス工業', icon: '⚪',
-      howto: 'スマホを かたむけて、ボールを ゴールまで はこぼう！',
+      howto: 'スマホを たての まま ひだり・みぎに かたむけて、ボールを ゴールまで はこぼう！',
       enabled: true, minTier: 0, time: [30, 30, 30], needs: 'tilt',
       metrics: {
         hiddenFails: { axis: { logic: -2 }, base: [[1, 1], [1.5, 1.2], [2, 1.5]] },

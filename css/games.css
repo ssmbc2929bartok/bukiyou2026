@@ -1114,22 +1114,41 @@
   max-width: 260px;
 }
 
+/* スマホは縦向きのまま（実際の遊び方と同じ向き）で、左右に傾ける。
+   画面の縦が短いときは小さくして、スクロールしなくても「はじめる」まで見えるようにする */
 .tilt-phone {
+  --phone-h: clamp(80px, 15vh, 150px);
   position: relative;
-  width: 160px;
-  height: 92px;
-  margin: 18px auto 10px;
+  width: calc(var(--phone-h) * 0.59);
+  height: var(--phone-h);
+  margin: 14px auto 10px;
   border: 6px solid #23476c;
-  border-radius: 18px;
+  border-top-width: 14px;
+  border-bottom-width: 16px;
+  border-radius: 20px;
   background: #eef6fb;
+  transform-origin: 50% 70%;
   animation: tilt-phone 3.2s ease-in-out infinite;
+}
+
+/* 上のスピーカーの穴（縦向きだと分かるように） */
+.tilt-phone::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  width: 22px;
+  height: 4px;
+  margin-left: -11px;
+  border-radius: 2px;
+  background: #8ecae6;
 }
 
 .tilt-floor {
   position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 18px;
+  left: 6px;
+  right: 6px;
+  bottom: 22px;
   height: 7px;
   border-radius: 4px;
   background: #8d99ae;
@@ -1137,26 +1156,34 @@
 
 .tilt-ball {
   position: absolute;
-  bottom: 25px;
-  left: calc(50% - 10px);
-  width: 20px;
-  height: 20px;
+  bottom: 29px;
+  left: calc(50% - 9px);
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #ef476f;
   animation: tilt-ball 3.2s ease-in-out infinite;
 }
 
+.tilt-note {
+  margin-bottom: 6px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 900;
+  color: #1766b3;
+}
+
 @keyframes tilt-phone {
   0%, 100% { transform: rotate(0deg); }
-  15%, 40% { transform: rotate(-14deg); }
-  60%, 85% { transform: rotate(14deg); }
+  15%, 40% { transform: rotate(-16deg); }
+  60%, 85% { transform: rotate(16deg); }
 }
 
 @keyframes tilt-ball {
-  0%, 15% { left: calc(50% - 10px); }
-  40%, 60% { left: 12px; }
-  85% { left: calc(100% - 32px); }
-  100% { left: calc(50% - 10px); }
+  0%, 15% { left: calc(50% - 9px); }
+  40%, 60% { left: 6px; }
+  85% { left: calc(100% - 24px); }
+  100% { left: calc(50% - 9px); }
 }
 
 .tilt-labels {
@@ -1177,12 +1204,59 @@
 }
 
 .tilt-demo.small {
-  padding: 4px 8px 6px;
+  max-width: 230px;
+  padding: 6px 8px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.85);
-  transform: scale(0.8);
+  background: rgba(255, 255, 255, 0.88);
+  transform: scale(0.75);
+  transform-origin: 50% 0;
 }
 
 .tilt-demo.small .tilt-phone {
-  margin-top: 10px;
+  margin-top: 8px;
+}
+
+/* 縦が短い画面（ブラウザのバーを除いて 720px 以下）では、説明画面の余白を詰める */
+@media (max-height: 720px) {
+  .game-intro {
+    padding-top: 2px;
+  }
+  .game-icon {
+    margin-top: 6px;
+    font-size: 48px;
+  }
+  .game-intro h1 {
+    margin-top: 4px;
+  }
+  .game-howto {
+    margin: 10px 0 4px;
+    font-size: 17px;
+  }
+  .game-hand {
+    margin: 0 0 10px;
+    font-size: 36px;
+  }
+  .tilt-demo {
+    margin: 2px auto 10px;
+  }
+  .tilt-phone {
+    margin: 8px auto 6px;
+  }
+}
+/* さらに縦が短い画面（iPhone SE でブラウザのバーを除いた高さくらい） */
+@media (max-height: 580px) {
+  .game-icon {
+    font-size: 40px;
+  }
+  .game-intro h1 {
+    font-size: 24px;
+  }
+  .game-howto {
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+  .tilt-note {
+    margin-bottom: 2px;
+    font-size: 14px;
+  }
 }
