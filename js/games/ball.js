@@ -6,6 +6,8 @@
  * かくれた所は、カバーの下から出ているダクトの出口の位置から、どちらの穴が正しいかを予想する。
  * 始める前の角度を基準にする。傾きが使えない端末では別のゲームに変える（core.js）。
  * ?debug のときだけ、傾きの代わりに ◀ ▶ ボタン（矢印キー）で動かせる。
+ * 「ゲームに慣れていない人には難しい」という声があったので、説明画面とゲームの最初に、
+ * スマホを左右に傾けるとボールが転がるアニメーションを出す。
  *   hiddenFails : かくれた所で違う穴に落ちた回数 → かんがえる（−）
  *   walls       : 壁に勢いよく当たった回数 → ていねい（−）
  */
@@ -15,7 +17,17 @@
   const LEVELS = 4;           // 段の数（いちばん下の段にゴール）
   const HIDDEN = [1, 2, 3];
 
+  // スマホを傾けるとボールが転がるアニメーション（説明画面とゲームの最初に出す）
+  function tiltDemo(box, small) {
+    box.innerHTML =
+      '<div class="tilt-demo' + (small ? ' small' : '') + '">' +
+      '<div class="tilt-phone"><div class="tilt-floor"></div><div class="tilt-ball"></div></div>' +
+      '<div class="tilt-labels"><span>← ひだりに かたむける</span><span>みぎに かたむける →</span></div>' +
+      '</div>';
+  }
+
   BKF.games.register('ball', {
+    demo: function (box) { tiltDemo(box, false); },
     start: function (ctx) {
       const W = ctx.width();
       const H = ctx.height();
@@ -28,6 +40,9 @@
       const g = canvas.getContext('2d');
       g.scale(dpr, dpr);
       const msg = ctx.el('div', 'game-msg', null, 'スマホを かたむけてね');
+      // 最初のうちは、傾け方のアニメーションを出しておく（ボールが動いたら消す）
+      const hint = ctx.el('div', 'ball-hint');
+      tiltDemo(hint, true);
 
       // コースを作る
       const levels = [];
@@ -180,6 +195,7 @@
       ctx.loop(function (dt) {
         const lv = levels[level];
         if (state === 'roll') {
+          if (hint.parentNode && Math.abs(vx) > 60) hint.remove();
           const t = Math.max(-25, Math.min(25, tilt));
           vx += (t / 25) * 700 * dt;
           vx *= Math.max(0, 1 - 1.2 * dt);

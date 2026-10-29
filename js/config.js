@@ -7,7 +7,8 @@
   const BKF = root.BKF = root.BKF || {};
 
   BKF.config = {
-    appVersion: '2.0.0',
+    // 版の番号。変えたら README の「バージョンと変更履歴」にも書く。画面の下とスプレッドシートに出る
+    appVersion: '2.1.0',
 
     // 開催回の識別子。スプレッドシートの「eventId」列に入る。
     eventId: '2026-10',
