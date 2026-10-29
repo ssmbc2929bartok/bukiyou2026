@@ -5,6 +5,7 @@
  *   start(ctx) は { end(reason) } を返す。end は時間切れ・とばすのときに呼ばれ、
  *   そこまでの値（metrics）を返す。ゲームが自分で終わるときは ctx.finish(metrics) を呼ぶ。
  *   delayTimer: true のゲームは、ctx.startTimer() を呼ぶまでタイマーが動かない。
+ *   demo(box) があるゲームは、説明画面に動く説明を出す（ないときは指のアニメーション）。
  */
 (function (root) {
   'use strict';
@@ -72,6 +73,12 @@
     $('game-company').textContent = def.company + ' に ちなんだ ゲーム';
     $('game-title').textContent = def.title;
     $('game-howto').textContent = def.howto;
+    $('game-tier').textContent = BKF.tiers[tier].label;
+    $('game-tier-play').textContent = BKF.tiers[tier].label;
+    const demo = $('game-demo');
+    demo.innerHTML = '';
+    if (impl.demo) impl.demo(demo);
+    else demo.innerHTML = '<div class="game-hand">👆</div>';
     $('game-intro').hidden = false;
     $('game-play').hidden = true;
     $('game-done').hidden = true;

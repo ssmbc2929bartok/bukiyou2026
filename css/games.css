@@ -1079,3 +1079,110 @@
   min-width: 80px;
   font-size: 26px;
 }
+
+/* ---------- 難易度の表示 ---------- */
+
+.game-tier {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: #5b4636;
+  font-size: 12px;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
+.game-tier.small {
+  margin-left: 0;
+  padding: 2px 8px;
+  background: #e4f1fb;
+  color: #1766b3;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.game-tier:empty {
+  display: none;
+}
+
+/* ---------- 動く説明（ボール転がし：スマホを傾けるとボールが転がる） ---------- */
+
+.tilt-demo {
+  margin: 6px auto 16px;
+  max-width: 260px;
+}
+
+.tilt-phone {
+  position: relative;
+  width: 160px;
+  height: 92px;
+  margin: 18px auto 10px;
+  border: 6px solid #23476c;
+  border-radius: 18px;
+  background: #eef6fb;
+  animation: tilt-phone 3.2s ease-in-out infinite;
+}
+
+.tilt-floor {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 18px;
+  height: 7px;
+  border-radius: 4px;
+  background: #8d99ae;
+}
+
+.tilt-ball {
+  position: absolute;
+  bottom: 25px;
+  left: calc(50% - 10px);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ef476f;
+  animation: tilt-ball 3.2s ease-in-out infinite;
+}
+
+@keyframes tilt-phone {
+  0%, 100% { transform: rotate(0deg); }
+  15%, 40% { transform: rotate(-14deg); }
+  60%, 85% { transform: rotate(14deg); }
+}
+
+@keyframes tilt-ball {
+  0%, 15% { left: calc(50% - 10px); }
+  40%, 60% { left: 12px; }
+  85% { left: calc(100% - 32px); }
+  100% { left: calc(50% - 10px); }
+}
+
+.tilt-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 900;
+  color: #5b7590;
+}
+
+.ball-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40px;
+  z-index: 12;
+  pointer-events: none;
+}
+
+.tilt-demo.small {
+  padding: 4px 8px 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  transform: scale(0.8);
+}
+
+.tilt-demo.small .tilt-phone {
+  margin-top: 10px;
+}

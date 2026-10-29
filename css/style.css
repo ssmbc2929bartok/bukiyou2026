@@ -1160,3 +1160,12 @@ h1[tabindex="-1"]:focus {
   }
   .confetti { display: none; }
 }
+
+/* 版の番号（README の「バージョンと変更履歴」と合わせる） */
+.app-version {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: #a89888;
+}

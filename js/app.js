@@ -159,22 +159,31 @@
     show('screen-game');
     BKF.games.run(step.gameId, state.tier).then(function (res) {
       if (res.unavailable) {
-        // 傾きが使えない端末 → まだ出していないゲームに変える
+        // 傾きが使えない端末・許可されなかったとき → お知らせを出してから、まだ出していないゲームに変える
         const planned = steps.filter(function (s) { return s.kind === 'game'; }).map(function (s) { return s.gameId; });
         const alt = BKF.games.choose(state.tier, 1, planned.concat(Object.keys(state.replaced)))[0];
         state.replaced[step.gameId] = alt || '';
-        if (alt) {
-          step.gameId = alt;
-          runGame(step);
-          return;
-        }
-        res = { id: step.gameId, tier: state.tier, metrics: {}, skipped: true, reason: 'unavailable' };
+        openModal('popup-game-change');
+        $('game-change-ok').onclick = function () {
+          closeModal('popup-game-change');
+          if (alt) {
+            step.gameId = alt;
+            runGame(step);
+            return;
+          }
+          done({ id: step.gameId, tier: state.tier, metrics: {}, skipped: true, reason: 'unavailable' });
+        };
+        return;
       }
+      done(res);
+    });
+
+    function done(res) {
       step.result = res;
       state.games.push(res);
       state.stepIndex++;
       renderStep('next');
-    });
+    }
   }
 
   function renderStep(direction) {
@@ -526,6 +535,7 @@
   }
 
   $('top-note').innerHTML = 'しつもんと ミニゲームに こたえてね<br>（やく 3〜5ふん）';
+  doc.querySelectorAll('[data-version]').forEach(function (el) { el.textContent = 'v' + BKF.config.appVersion; });
   $('start-button').addEventListener('click', start);
   $('q-submit').addEventListener('click', submitStep);
   $('q-back').addEventListener('click', function () {

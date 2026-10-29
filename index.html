@@ -61,6 +61,7 @@
           <p>お名前などの個人情報はお聞きしません。回答は統計として集計し、不器用ファクトリーと質問内容の改善に使います。</p>
           <p><a href="privacy.html">プライバシーポリシー</a></p>
         </div>
+        <p class="app-version" data-version></p>
       </div>
     </section>
 
@@ -100,16 +101,17 @@
     <section id="screen-game" class="screen" data-bg="sky" hidden aria-labelledby="game-title">
       <div class="survey game-card">
         <div class="game-intro" id="game-intro">
-          <p class="game-label">ミニゲーム</p>
+          <p class="game-label">ミニゲーム<span class="game-tier" id="game-tier"></span></p>
           <div class="game-icon" id="game-icon" aria-hidden="true"></div>
           <h1 id="game-title"></h1>
           <p class="game-company" id="game-company"></p>
           <p class="game-howto" id="game-howto"></p>
-          <div class="game-hand" aria-hidden="true">👆</div>
+          <div class="game-demo" id="game-demo" aria-hidden="true"></div>
           <button type="button" class="submit" id="game-start">はじめる！</button>
         </div>
         <div class="game-play" id="game-play" hidden>
           <div class="game-top">
+            <span class="game-tier small" id="game-tier-play"></span>
             <div class="game-timer" aria-hidden="true"><div class="game-timer-bar" id="game-timer-bar"></div></div>
             <button type="button" class="game-skip" id="game-skip">とばす</button>
           </div>
@@ -152,6 +154,7 @@
         </div>
 
         <button type="button" class="big-button again-button" id="again-button">もういちど あそぶ</button>
+        <p class="app-version" data-version></p>
         <div class="debug" id="debug" hidden></div>
       </div>
     </section>
@@ -164,6 +167,16 @@
       <h2 id="unanswered-title">まだ えらんで いないよ！</h2>
       <p id="unanswered-text">ひとつ えらんでから<br>「これに きめた！」を おしてね</p>
       <button type="button" class="submit" id="unanswered-ok">わかった！</button>
+    </div>
+  </div>
+
+  <!-- 傾きが使えず、ゲームを変えるときのお知らせ -->
+  <div class="modal" id="popup-game-change" hidden>
+    <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="game-change-title" aria-describedby="game-change-text">
+      <div class="modal-emoji" aria-hidden="true">📱</div>
+      <h2 id="game-change-title">ほかの ゲームに するね！</h2>
+      <p id="game-change-text">この スマホでは<br>かたむける ゲームが できないみたい</p>
+      <button type="button" class="submit" id="game-change-ok">つぎの ゲームへ</button>
     </div>
   </div>
 
