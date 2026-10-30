@@ -15,7 +15,8 @@
 
     // GAS ウェブアプリの URL（gas/Code.gs をデプロイしたときの「ウェブアプリ URL」）。
     // 空のときはデータを送らずに結果だけ表示する（動作確認用）。
-    gasUrl: 'https://script.google.com/a/macros/oit.ac.jp/s/AKfycbxs9fiW58sYdZpfho5LrctM9TZ_m9u5SuUAD8qNRAsmYr3MCGASi7CLtpuXcpD8kU6tvA/exec',
+    gasUrl:
+      'https://script.google.com/macros/s/AKfycbwcn-oUlhxpAoUqDB7IWmgqUP0NVankXTHlKHib_zGyVxcI5LGMHem2j0ANNefKOftG/exec',
 
     // この回に参加する企業の id（js/data/companies.js）。空の配列なら全社を対象にする。
     companyIds: [],
@@ -23,8 +24,16 @@
     // 出題する質問の id と順番（js/data/questions.js）。F-001「質問内容は固定」。
     // 2026/10 の打ち合わせで20問から10問に減らした（ゲームで測りにくい軸を中心に残す）。
     questionIds: [
-      'q50', 'q23', 'q38', 'q07', 'q22',
-      'q02', 'q32', 'q41', 'q03', 'q29',
+      'q50',
+      'q23',
+      'q38',
+      'q07',
+      'q22',
+      'q02',
+      'q32',
+      'q41',
+      'q03',
+      'q29',
     ],
 
     // ミニゲームの実験条件。開始時にランダムでどちらかにする（docs/games.md）。
