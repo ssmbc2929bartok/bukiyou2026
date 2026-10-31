@@ -606,7 +606,9 @@
         BKF.axes.map(function (a, i) { return a.label + ' ' + vec[i].toFixed(2); }).filter(function (s, i) { return vec[i] !== 0; }).join('\n');
       const nav = doc.createElement('div');
       nav.className = 'debug-nav';
-      nav.appendChild(debugLink('もういちど', '&games&play=' + id + '&tier=' + tier));
+      const again = debugLink('もういちど', '');
+      again.href = root.location.search;   // longHint=0 などの設定もそのまま
+      nav.appendChild(again);
       nav.appendChild(debugLink('ゲームを えらびなおす', '&games'));
       $('game-done').appendChild(nav);
       $('game-done').appendChild(box);
@@ -636,6 +638,13 @@
         tiers.appendChild(a);
       });
       li.appendChild(tiers);
+      // クロスワードは、長い言葉の1文字ヒントを入れない形も遊びくらべられるようにする
+      if (id === 'crossword') {
+        const alt = doc.createElement('span');
+        alt.className = 'debug-game-tiers';
+        alt.appendChild(debugLink('上級（長い言葉の1文字ヒントなし）', '&games&play=crossword&tier=2&longHint=0', 'debug-tier'));
+        li.appendChild(alt);
+      }
       list.appendChild(li);
     });
     show('screen-debug-games');
