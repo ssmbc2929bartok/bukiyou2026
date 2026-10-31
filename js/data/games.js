@@ -2,6 +2,7 @@
  * ミニゲームの設定と点数の付け方（docs/games.md）
  *
  *   enabled : false にすると出なくなる（間に合わない・不具合があるとき）
+ *             開催回ごとに止めるときは、ここではなく config.js の disabledGames に入れる
  *   minTier : 何の難易度から出すか（0 初級 / 1 中級 / 2 上級）
  *   time    : 制限時間（秒）。[初級, 中級, 上級]
  *   needs   : 'tilt' … スマホの傾きが必要
@@ -174,12 +175,13 @@
     return out;
   };
 
-  // この難易度で遊べるゲームの id
+  // この難易度で遊べるゲームの id（config.js の disabledGames に入れたゲームは出さない）
   BKF.playableGames = function (tier, opts) {
     const exclude = (opts && opts.exclude) || [];
+    const disabled = (BKF.config && BKF.config.disabledGames) || [];
     return Object.keys(BKF.gameDefs).filter(function (id) {
       const def = BKF.gameDefs[id];
-      return def.enabled && tier >= def.minTier && exclude.indexOf(id) === -1;
+      return def.enabled && tier >= def.minTier && exclude.indexOf(id) === -1 && disabled.indexOf(id) === -1;
     });
   };
 })(typeof window !== 'undefined' ? window : globalThis);
