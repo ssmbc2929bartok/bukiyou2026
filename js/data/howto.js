@@ -56,21 +56,38 @@
   BKF.howtoCards = {
     screw: [
       {
-        caption: 'まうえで タップすると しまる。ずれると しまらないよ',
+        caption: 'まうえで タップすると しまる',
         dur: 3600,
         parts: [
+          { html: '', cls: 'hd-plate wood', x: 50, y: 74 },
           { html: '', cls: 'hd-screw', x: 25, y: 74 },
+          // 締まると、ゲームと同じく 2回転と90度まわって 緑になる
           { html: '', cls: 'hd-screw', x: 50, y: 74, kf: [
-            { offset: 0, transform: 'rotate(0deg)', boxShadow: '0 0 0 0 #8ee6b2' },
-            { offset: 0.26, transform: 'rotate(0deg)', boxShadow: '0 0 0 0 #8ee6b2' },
-            { offset: 0.32, transform: 'rotate(90deg)', boxShadow: '0 0 0 4px #8ee6b2' },
-            { offset: 1, transform: 'rotate(90deg)', boxShadow: '0 0 0 4px #8ee6b2' },
+            { offset: 0, transform: 'rotate(0deg)', boxShadow: '0 0 0 0 #8ee6b2', background: 'radial-gradient(circle at 35% 30%, #f1f3f5, #adb5bd)' },
+            { offset: 0.26, transform: 'rotate(0deg)', boxShadow: '0 0 0 0 #8ee6b2', background: 'radial-gradient(circle at 35% 30%, #f1f3f5, #adb5bd)' },
+            { offset: 0.265, background: 'radial-gradient(circle at 35% 30%, #e6fff1, #4cc38a)' },
+            { offset: 0.45, transform: 'rotate(810deg)', boxShadow: '0 0 0 4px #8ee6b2', background: 'radial-gradient(circle at 35% 30%, #e6fff1, #4cc38a)' },
+            { offset: 1, transform: 'rotate(810deg)', boxShadow: '0 0 0 4px #8ee6b2', background: 'radial-gradient(circle at 35% 30%, #e6fff1, #4cc38a)' },
           ] },
           { html: '', cls: 'hd-screw', x: 75, y: 74 },
           { html: '🔧', cls: 'hd-wrench', size: 30, x: 15, y: 30, kf: move([[12, 30, 0], [88, 30, 0.5], [12, 30, 1]]) },
           { html: 'しまった！', cls: 'hd-pop good', x: 50, y: 52, kf: appear(0.27, 0.5) },
         ],
         finger: [[88, 92, 0], [86, 84, 0.2], [86, 78, 0.25, 'tap'], [88, 92, 0.4]],
+      },
+      {
+        // レンチが ねじと ねじの あいだに あるときに タップ → 「まだ！」で しまらない
+        caption: 'ずれて タップすると しまらないよ',
+        dur: 3600,
+        parts: [
+          { html: '', cls: 'hd-plate iron', x: 50, y: 74 },
+          { html: '', cls: 'hd-screw', x: 25, y: 74 },
+          { html: '', cls: 'hd-screw', x: 50, y: 74 },
+          { html: '', cls: 'hd-screw', x: 75, y: 74 },
+          { html: '🔧', cls: 'hd-wrench', size: 30, x: 15, y: 30, kf: move([[12, 30, 0], [88, 30, 0.5], [12, 30, 1]]) },
+          { html: 'まだ！', cls: 'hd-pop bad', x: 37, y: 52, kf: appear(0.17, 0.42) },
+        ],
+        finger: [[88, 92, 0], [86, 84, 0.12], [86, 78, 0.165, 'tap'], [88, 92, 0.35]],
       },
     ],
 

@@ -1270,6 +1270,21 @@ h1[tabindex="-1"]:focus {
   line-height: 1.2;
 }
 
+/* お知らせの2つめのボタン（白地） */
+.modal-sub {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 12px;
+  border: 3px solid #cfe3f5;
+  border-radius: 28px;
+  background: #fff;
+  color: var(--sky-title);
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .modal-box h2 {
   margin: 8px 0;
   font-size: 24px;

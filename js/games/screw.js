@@ -3,6 +3,7 @@
  * レンチが左右に往復する。ねじの真上に来たときにタップすると締まる。
  *   offset : タップしたときのずれの平均（ねじの間隔を 1 とする）→ ていねい（−）
  *   early  : まだ遠い（ずれ 0.5 以上）のに押した回数 → チャレンジ（＋）
+ *   plate  : ねじを入れる板。毎回 鉄板（iron）か 木の板（wood）をランダムに選ぶ（記録だけ）
  */
 (function (root) {
   'use strict';
@@ -26,6 +27,7 @@
       let early = 0;
       let done = 0;
       let total = 0;
+      const plate = Math.random() < 0.5 ? 'iron' : 'wood';
 
       const laneH = H / lanes.length;
       lanes.forEach(function (lane, li) {
@@ -41,8 +43,8 @@
         lane.phase = Math.random() * 2;
         lane.x = lane.minX;
         lane.screws = [];
-        const line = ctx.el('div', 'screw-lane');
-        line.style.top = (lane.screwY + 26) + 'px';
+        const board = ctx.el('div', 'screw-plate ' + plate);
+        board.style.top = (lane.screwY - 36) + 'px';
         for (let i = 0; i < lane.count; i++) {
           const x = lane.spacing * (i + 1);
           const guide = ctx.el('div', 'screw-guide');
@@ -68,7 +70,7 @@
 
       function metrics() {
         const mean = offsets.length ? offsets.reduce(function (a, b) { return a + b; }, 0) / offsets.length : null;
-        return { offset: mean, early: early, done: done, total: total };
+        return { offset: mean, early: early, done: done, total: total, plate: plate };
       }
 
       ctx.on(ctx.stage, 'pointerdown', function (e) {

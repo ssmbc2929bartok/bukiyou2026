@@ -406,6 +406,7 @@
       payload[p + 'first'] = g.firstTouchMs;
       payload[p + 'taps'] = g.taps;
       payload[p + 'reason'] = g.reason;
+      if (g.rulesSkipped !== null && g.rulesSkipped !== undefined) payload[p + 'rulesSkipped'] = g.rulesSkipped;
     });
     Object.keys(state.replaced).forEach(function (id) {
       payload['g_' + id + '_replaced'] = state.replaced[id];
