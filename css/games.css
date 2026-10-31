@@ -1063,15 +1063,6 @@
   overflow-wrap: anywhere;
 }
 
-/* 会社の名前を当てる言葉のときに添える、どんな会社かの説明 */
-.cw-hint-co {
-  display: block;
-  margin-top: 2px;
-  color: #5b7590;
-  font-size: 0.86em;
-  line-height: 1.75;
-}
-
 .cw-hint-emoji {
   font-size: 26px;
   vertical-align: middle;

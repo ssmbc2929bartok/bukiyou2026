@@ -224,8 +224,8 @@
 
       // 下から 文字ボタン → ヒント → 盤 の順に、重ならないように置く。
       // 前は盤を高さの42%と決め打ちしていたので、上級の長いヒントが文字ボタンに重なることがあった。
-      // ヒントには会社の説明も出るので、その分の高さ（HINT_H）を先に取り、残りで盤の大きさを決める。
-      const HINT_H = ctx.tier === 2 ? 118 : 124;   // 中級は絵が大きく、会社の名前を当てる言葉には説明も出る
+      // ヒント（会社のことを入れた問題文）の高さ（HINT_H）を先に取り、残りで盤の大きさを決める。
+      const HINT_H = ctx.tier === 2 ? 118 : 124;   // 中級は絵が大きい
       (function layout() {
         const gap = 3;
         const tilesTop = H - 6 - tiles.offsetHeight;
@@ -322,40 +322,10 @@
         });
         const label = (w.dir === 'A' ? 'ヨコ' : 'タテ') + w.no + '（' + w.chars.length + 'もじ）';
         hintEl.innerHTML = '<b>' + label + '</b><br>' + (w.emoji ? '<span class="cw-hint-emoji">' + w.emoji + '</span>' : '') +
-          BKF.util.rubyHtml(w.hint) + companyNote(w);
+          BKF.util.rubyHtml(w.hint);
         // 入りきらないときは、字を小さくして収める
         hintEl.style.fontSize = '';
         for (let f = 14; f > 10 && hintEl.scrollHeight > hintEl.clientHeight + 1; f--) hintEl.style.fontSize = (f - 1) + 'px';
-      }
-
-      // どの言葉も 不器用ファクトリーに出ている会社と関係があると分かるように、関係する会社を添える。
-      //   上級：すべての言葉に、会社の名前と説明（js/data/companies.js の desc。トレーディングカードの説明をもとにした文）
-      //   中級：会社の名前を当てる言葉（star）だけ説明を添える（ほかの言葉は、ヒントの文に会社の名前が入っている）
-      function companyNote(w) {
-        if (!w.star && ctx.tier !== 2) return '';
-        const co = BKF.crosswordCompany(w.co);
-        if (!co) return '';
-        // 会社の名前を当てる言葉では、名前を出すと答えが分かるので、説明だけにする
-        const name = w.star ? '' : '<b>' + BKF.util.rubyHtml(hideAnswer(co.name, w.w)) + '</b>：';
-        return '<span class="cw-hint-co">' + co.icon + ' ' + name + BKF.util.rubyHtml(hideAnswer(co.desc, w.w)) + '</span>';
-      }
-
-      // 説明の中に答えがそのまま出てくるとき（例：エムズコーポレーションの説明の「しさくひん」）は、そこを □ でかくす。
-      // 答えは小さい字を大きい字で書いているので、比べるときは説明の小さい字・カタカナも大きいひらがなにそろえる。
-      // かくすときは、ルビの漢字をよみ（ひらがな）にした文で □ にする。
-      function hideAnswer(text, answer) {
-        const kana = text.replace(/\{[^|}]*\|([^}]*)\}/g, '$1');
-        const plain = kana
-          .replace(/[ァ-ヶ]/g, function (ch) { return String.fromCharCode(ch.charCodeAt(0) - 0x60); })
-          .replace(/[ぁぃぅぇぉっゃゅょゎ]/g, function (ch) { return String.fromCharCode(ch.charCodeAt(0) + 1); });
-        if (plain.indexOf(answer) === -1) return text;
-        let out = '';
-        let i = 0;
-        for (let at = plain.indexOf(answer); at !== -1; at = plain.indexOf(answer, i)) {
-          out += kana.slice(i, at) + '□'.repeat(answer.length);
-          i = at + answer.length;
-        }
-        return out + kana.slice(i);
       }
 
       function metrics() {
