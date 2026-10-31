@@ -432,6 +432,41 @@
         ],
         finger: [[70, 99, 0], [52, 92, 0.15], [52, 88, 0.2, 'tap'], [62, 96, 0.38], [52, 92, 0.52], [52, 88, 0.58, 'tap'], [70, 99, 0.8]],
       },
+      {
+        // 上級だけ：ならべられる やじるしの数が きまって いる（js/games/robot.js の maxBlocks）
+        caption: 'じょうきゅうは、ならべられる かずが きまって いるよ',
+        tiers: [2],
+        dur: 3600,
+        parts: [
+          { html: '→', cls: 'hd-block', x: 38, y: 40 },
+          { html: '↓', cls: 'hd-block', x: 50, y: 40 },
+          { html: '→', cls: 'hd-block', x: 62, y: 40 },
+          { html: 'ならべられるのは 3こ', cls: 'hd-pop', x: 50, y: 14, kf: appear(0) },
+          { html: 'もう いっぱい！', cls: 'hd-pop bad', x: 50, y: 62, kf: appear(0.36, 0.7) },
+          { html: '↑', cls: 'hd-key', x: 26, y: 88 },
+          { html: '↓', cls: 'hd-key', x: 42, y: 88 },
+          { html: '←', cls: 'hd-key', x: 58, y: 88 },
+          { html: '→', cls: 'hd-key', x: 74, y: 88 },
+        ],
+        finger: [[60, 99, 0], [74, 92, 0.25], [74, 88, 0.3, 'tap'], [86, 99, 0.6]],
+      },
+      {
+        // 上級だけ：「×2」「×3」で、さいごに おいた やじるしを くりかえす
+        caption: '「×2」「×3」で、おなじ やじるしを くりかえせるよ',
+        tiers: [2],
+        dur: 4400,
+        parts: [
+          { html: '<img src="assets/img/robot.png" alt="">', cls: 'hd-img', x: 14, y: 26, kf: move([[14, 26, 0], [14, 26, 0.52], [36, 26, 0.6], [58, 26, 0.68], [80, 26, 0.76], [80, 26, 1]]) },
+          { html: '<img src="assets/img/oit-tower.webp" alt="">', cls: 'hd-img', x: 80, y: 26 },
+          { html: 'ゴール', cls: 'hd-goal', x: 80, y: 50 },
+          { html: '→', cls: 'hd-block', x: 50, y: 62, kf: appear(0, 0.3) },
+          { html: '→×3', cls: 'hd-block wide', x: 50, y: 62, kf: appear(0.3) },
+          { html: '×3', cls: 'hd-key', x: 22, y: 88, kf: bump(0.28) },
+          { html: 'ぜんぶ じっこう', cls: 'hd-btn wide', x: 62, y: 88, kf: bump(0.5) },
+          { html: '3マス すすむ！', cls: 'hd-pop good', x: 50, y: 6, kf: appear(0.6, 0.95) },
+        ],
+        finger: [[40, 99, 0], [22, 92, 0.22], [22, 88, 0.28, 'tap'], [62, 92, 0.44], [62, 88, 0.5, 'tap'], [80, 99, 0.7]],
+      },
     ],
 
     jump: [

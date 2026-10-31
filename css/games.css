@@ -1898,6 +1898,11 @@
   font-size: 16px;
 }
 
+.hd-block.wide {
+  width: 44px;
+  font-size: 14px;
+}
+
 .hd-key {
   width: 30px;
   height: 28px;
