@@ -94,8 +94,30 @@
     else demo.innerHTML = '<div class="game-hand">👆</div>';
     $('game-intro').classList.toggle('has-howto', Boolean(howto));
 
+    // ルールのカードを全部見ずに始めたか（見ていないカードがあって「ほんとうに はじめる？」で始めたら 1）
+    let rulesSkipped = howto && cards.length > 1 ? 0 : null;
+
     return new Promise(function (resolve) {
       $('game-start').onclick = function () {
+        // カードが複数あって全部見ていないときは、確かめてから始める（知っている子はそのまま始められる）
+        if (howto && !howto.allSeen()) {
+          $('popup-howto-unseen').hidden = false;
+          $('howto-unseen-start').focus();
+          $('howto-unseen-start').onclick = function () {
+            $('popup-howto-unseen').hidden = true;
+            rulesSkipped = 1;
+            begin();
+          };
+          $('howto-unseen-back').onclick = function () {
+            $('popup-howto-unseen').hidden = true;
+            howto.showUnseen();
+          };
+          return;
+        }
+        begin();
+      };
+
+      function begin() {
         $('game-start').disabled = true;
         if (def.needs === 'tilt') {
           requestTilt().then(function (ok) {
@@ -105,7 +127,7 @@
         } else {
           play(true);
         }
-      };
+      }
 
       function play(tiltOk) {
         if (howto) howto.stop();
@@ -167,7 +189,7 @@
             stage.innerHTML = '';
             resolve({
               id: id, tier: tier, metrics: m || {}, skipped: reason === 'skip', reason: reason,
-              ms: ms, firstTouchMs: firstTouchMs, taps: taps,
+              ms: ms, firstTouchMs: firstTouchMs, taps: taps, rulesSkipped: rulesSkipped,
             });
           }, 1100);
         }

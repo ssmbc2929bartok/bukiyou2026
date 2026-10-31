@@ -267,7 +267,7 @@
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #f2f4f7, #9aa5b1 70%, #6b7785);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-  transition: transform 0.4s ease;
+  transition: transform 1s cubic-bezier(0.2, 0.7, 0.3, 1), background 0.3s;
 }
 
 .screw::after {
@@ -281,8 +281,10 @@
   background: #4a5560;
 }
 
+/* 締まったねじは、2回転と90度まわって緑になる（90度だけでは分かりにくかった） */
 .screw.done {
-  transform: rotate(90deg) scale(0.92);
+  transform: rotate(810deg) scale(0.92);
+  background: radial-gradient(circle at 35% 35%, #e6fff1, #4cc38a 70%, #2b8a5e);
   box-shadow: 0 0 0 5px #8ee6b2, 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
@@ -314,11 +316,33 @@
   border-left: 2px dashed rgba(23, 102, 179, 0.25);
 }
 
-.screw-lane {
+/* ねじを入れる板：鉄板か木の板（毎回ランダム） */
+.screw-plate {
   position: absolute;
   left: 8px;
   right: 8px;
-  border-bottom: 3px solid #d7e6f3;
+  height: 72px;
+  border-radius: 10px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.6), inset 0 -3px 0 rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.screw-plate.iron,
+.hd-plate.iron {
+  background:
+    radial-gradient(circle at 12px 12px, #7d8792 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 12px) 12px, #7d8792 3px, transparent 4px),
+    radial-gradient(circle at 12px calc(100% - 12px), #7d8792 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 12px) calc(100% - 12px), #7d8792 3px, transparent 4px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 6px),
+    linear-gradient(180deg, #dfe4e9, #a9b2bc);
+}
+
+.screw-plate.wood,
+.hd-plate.wood {
+  background:
+    repeating-linear-gradient(178deg, rgba(110, 64, 24, 0.2) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(181deg, rgba(255, 236, 200, 0.18) 0 4px, transparent 4px 15px),
+    linear-gradient(180deg, #e6b97f, #c8894b);
 }
 
 /* ---------- 石割り ---------- */
@@ -1448,6 +1472,17 @@
 
 .hd-pop.good {
   color: #2a9d8f;
+}
+
+.hd-pop.bad {
+  color: #e63946;
+}
+
+.hd-plate {
+  width: 86%;
+  height: 40%;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.6), inset 0 -2px 0 rgba(0, 0, 0, 0.15);
 }
 
 .hd-screw {

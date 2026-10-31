@@ -175,10 +175,12 @@
     let running = [];
     let timer = 0;
     let manual = false;
+    const seen = cards.map(function () { return false; });   // 見たカード（全部見たかを core.js が聞く）
 
     function show(i, byUser) {
       if (byUser) manual = true;
       index = (i + cards.length) % cards.length;
+      seen[index] = true;
       track.style.transform = 'translateX(' + (-100 * index) + '%)';
       cardEls.forEach(function (c, k) { c.setAttribute('aria-hidden', k === index ? 'false' : 'true'); });
       [].forEach.call(dots.children, function (d, k) { d.classList.toggle('on', k === index); });
@@ -206,6 +208,12 @@
 
     show(0);
     return {
+      allSeen: function () { return seen.every(Boolean); },
+      // まだ見ていないカードを出す（「ルールを みる」を押したとき）
+      showUnseen: function () {
+        const i = seen.indexOf(false);
+        if (i !== -1) show(i, true);
+      },
       stop: function () {
         clearTimeout(timer);
         running.forEach(function (a) { a.cancel(); });

@@ -204,6 +204,17 @@
     </div>
   </div>
 
+  <!-- ルールのカードを全部見ずに「はじめる！」を押したとき（知っている子はそのまま始められる） -->
+  <div class="modal" id="popup-howto-unseen" hidden>
+    <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="howto-unseen-title" aria-describedby="howto-unseen-text">
+      <div class="modal-emoji" aria-hidden="true">📖</div>
+      <h2 id="howto-unseen-title">ほんとうに はじめる？</h2>
+      <p id="howto-unseen-text">まだ みていない ルールが あるよ</p>
+      <button type="button" class="submit" id="howto-unseen-start">はじめる！</button>
+      <button type="button" class="modal-sub" id="howto-unseen-back">ルールを みる</button>
+    </div>
+  </div>
+
   <!-- S-006 データ送信エラー表示 -->
   <div class="modal" id="popup-send-error" hidden>
     <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="send-error-title" aria-describedby="send-error-text">
