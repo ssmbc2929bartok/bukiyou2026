@@ -73,6 +73,7 @@
     $('game-company').textContent = def.company + ' に ちなんだ ゲーム';
     $('game-title').textContent = def.title;
     $('game-howto').textContent = def.howto;
+    $('game-time').textContent = '⏱ じかんは ' + def.time[tier] + 'びょう';
     $('game-tier').textContent = BKF.tiers[tier].label;
     $('game-tier-play').textContent = BKF.tiers[tier].label;
     const demo = $('game-demo');
@@ -129,11 +130,10 @@
         function startTimer() {
           if (timerStart) return;
           timerStart = performance.now();
-          const bar = $('game-timer-bar');
           (function tick() {
             if (ended) return;
-            const left = Math.max(0, 1 - (performance.now() - timerStart) / (limit * 1000));
-            bar.style.width = (left * 100) + '%';
+            const left = Math.max(0, limit - (performance.now() - timerStart) / 1000);
+            showTime(left);
             if (left <= 0) { end('timeup'); return; }
             timerRaf = requestAnimationFrame(tick);
           })();
@@ -162,8 +162,16 @@
           }, 1100);
         }
 
+        // のこり時間は数字で出す（バーより見やすいという声があった）。のこり5秒からは赤くする
+        function showTime(left) {
+          const num = $('game-timer-num');
+          const sec = Math.ceil(left);
+          if (num.textContent !== String(sec)) num.textContent = sec;
+          num.parentNode.classList.toggle('hurry', sec <= 5);
+        }
+
         $('game-skip').onclick = function () { end('skip'); };
-        $('game-timer-bar').style.width = '100%';
+        showTime(limit);
 
         const ctx = {
           stage: stage,

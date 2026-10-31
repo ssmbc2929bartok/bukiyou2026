@@ -8,7 +8,7 @@
 
   BKF.config = {
     // 版の番号。変えたら README の「バージョンと変更履歴」にも書く。画面の下とスプレッドシートに出る
-    appVersion: '2.2.0',
+    appVersion: '2.3.0',
 
     // 開催回の識別子。スプレッドシートの「eventId」列に入る。
     eventId: '2026-10',
@@ -49,7 +49,7 @@
     //   stone いしわり / ball ボールころがし / robot ロボットを うごかそう /
     //   jump みんなで ジャンプ / bounce ケースを まもれ
     //   例：disabledGames: ['ball', 'jump'],（id は ' ' で囲む。囲まないとアプリ全体が動かなくなる）
-    disabledGames: ['jump', 'robot'],
+    disabledGames: [],
 
     // 1回の送信を待つ時間（ミリ秒）。これを過ぎたら失敗として扱う。
     sendTimeoutMs: 8000,

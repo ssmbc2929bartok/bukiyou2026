@@ -111,10 +111,7 @@
 
       const W = ctx.width();
       const H = ctx.height();
-      const cell = Math.floor(Math.min((W - 24) / n, (H - 190) / n, 64));
       const board = ctx.el('div', 'robot-board');
-      board.style.gridTemplateColumns = 'repeat(' + n + ', ' + cell + 'px)';
-      board.style.gridTemplateRows = 'repeat(' + n + ', ' + cell + 'px)';
       for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
           const el = ctx.el('div', 'robot-cell' + (walls[r + ',' + c] ? ' wall' : ''), board);
@@ -124,12 +121,10 @@
       const sprite = ctx.el('img', 'robot-sprite', board);
       sprite.src = 'assets/img/robot.png';
       sprite.alt = 'ロボット';
-      sprite.style.width = cell + 'px';
-      sprite.style.height = cell + 'px';
 
       const program = ctx.el('div', 'robot-program');
-      program.style.top = (n * (cell + 3) + 18) + 'px';
       const pad = ctx.el('div', 'robot-pad');
+      let cell = 0;          // マスの大きさ。ボタンを並べたあとに、残りの高さから決める（layout）
 
       let blocks = [];
       let pos = start.slice();
@@ -160,8 +155,12 @@
         program.innerHTML = html;
       }
 
-      function button(label, cls, fn) {
-        const b = ctx.el('button', 'game-btn ' + (cls || ''), pad, label);
+      // ボタンは2段：上に やじるし・×2・×3・けす、下に 1つずつ・ぜんぶ じっこう
+      const rowTop = ctx.el('div', 'robot-row', pad);
+      const rowRun = ctx.el('div', 'robot-row run', pad);
+
+      function button(label, cls, fn, row) {
+        const b = ctx.el('button', 'game-btn ' + (cls || ''), row || rowTop, label);
         b.type = 'button';
         ctx.on(b, 'click', function () { if (!busy && !solved) fn(); });
         return b;
@@ -183,14 +182,33 @@
           });
         });
       }
-      button('けす', 'sub' + (tier === 2 ? '' : ' wide2'), function () {
+      button('けす', 'sub erase', function () {
         blocks.pop();
         if (stepIndex > blocks.length) stepIndex = blocks.length;
         renderProgram();
       });
-      button('1つずつ', 'wide2', function () { run(true); });
-      button('ぜんぶ じっこう', 'wide2', function () { run(false); });
-      if (tier !== 2) pad.lastChild.style.gridColumn = 'span 4';
+      button('1つずつ', '', function () { run(true); }, rowRun);
+      button('ぜんぶ じっこう', '', function () { run(false); }, rowRun);
+
+      // 下から ボタン → ならべた ブロック → 盤 の順に、重ならないように置く。
+      // 前は盤の大きさを決め打ちしていたので、低い画面ではブロックの列がボタンの下にかくれていた。
+      function layout() {
+        const gap = 3;
+        const progH = 44;
+        const padTop = H - 8 - pad.offsetHeight;
+        const progTop = padTop - 10 - progH;
+        const boardSpace = progTop - 10 - 8 - gap * 2;
+        cell = Math.floor(Math.min((W - 24 - gap * (n + 1)) / n, (boardSpace - gap * (n - 1)) / n, 64));
+        board.style.gridTemplateColumns = 'repeat(' + n + ', ' + cell + 'px)';
+        board.style.gridTemplateRows = 'repeat(' + n + ', ' + cell + 'px)';
+        sprite.style.width = cell + 'px';
+        sprite.style.height = cell + 'px';
+        // 盤が小さくて余ったときは、盤とブロックの列をボタンのすぐ上に寄せる
+        const boardH = n * cell + gap * (n + 1);
+        const boardTop = Math.max(8, progTop - 10 - boardH);
+        board.style.top = boardTop + 'px';
+        program.style.top = (boardTop + boardH + 10) + 'px';      }
+      layout();
 
       function reset() {
         retries++;

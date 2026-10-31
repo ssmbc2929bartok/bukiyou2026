@@ -72,22 +72,45 @@
 
 .game-timer {
   flex: 1;
-  height: 14px;
-  border-radius: 999px;
-  background: #e4f1fb;
-  overflow: hidden;
+  min-width: 0;
+  color: #1766b3;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.game-timer-bar {
-  width: 100%;
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #7bdff2, #3dccc7);
+.game-timer-num {
+  display: inline-block;
+  min-width: 1.4em;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.game-timer.hurry {
+  color: #e63946;
+}
+
+/* 幅のせまいスマホでは「⏱ のこり」を省いて、数字と「びょう」だけにする */
+@media (max-width: 360px) {
+  .game-timer-icon {
+    display: none;
+  }
+}
+
+.game-time {
+  margin-top: 6px;
+  color: #1766b3;
+  font-size: 15px;
+  font-weight: 800;
 }
 
 .game-skip {
+  flex: none;
   min-height: 38px;
-  padding: 0 14px;
+  padding: 0 12px;
+  white-space: nowrap;
   border: 2px solid #cfe3f5;
   border-radius: 999px;
   background: #f3f9ff;
@@ -820,19 +843,23 @@
   left: 8px;
   right: 8px;
   display: flex;
-  flex-wrap: wrap;
+  justify-content: center;
   gap: 4px;
-  min-height: 40px;
-  padding: 4px;
+  height: 44px;
+  padding: 6px;
   border-radius: 10px;
   background: #fff;
   box-shadow: inset 0 0 0 2px #cfe3f5;
 }
 
+/* ブロックは1列に収める（数が多いときは幅を縮める） */
 .robot-block {
-  min-width: 38px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 52px;
   height: 32px;
-  padding: 0 6px;
+  padding: 0 2px;
+  white-space: nowrap;
   border-radius: 8px;
   background: #ffd166;
   color: #5b4636;
@@ -856,20 +883,31 @@
   left: 8px;
   right: 8px;
   bottom: 8px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 6px;
 }
 
+.robot-row {
+  display: flex;
+  gap: 5px;
+}
+
 .robot-pad .game-btn {
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 44px;
-  padding: 0 4px;
+  padding: 0 2px;
   font-size: 20px;
 }
 
-.robot-pad .wide2 {
-  grid-column: span 2;
+.robot-pad .erase,
+.robot-row.run .game-btn {
   font-size: 15px;
+}
+
+.robot-pad .erase {
+  flex-grow: 1.3;
 }
 
 .robot-goal-show {

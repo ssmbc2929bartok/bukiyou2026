@@ -555,8 +555,18 @@
   BKF.api.flushErrors();
   if (DEBUG) root.BKF.state = function () { return state; };
 
-  // 確認用：?debug&play=ゲームid&tier=0〜2 で、そのゲームだけを遊ぶ（データは送らない）
+  // 確認用：?debug&games でミニゲームの一覧を出し、えらんだゲームだけを遊ぶ（データは送らない）。
+  // ?debug&play=ゲームid&tier=0〜2 で、そのゲームをすぐに始める。
   const params = new URLSearchParams(root.location.search);
+
+  function debugLink(text, query, cls) {
+    const a = doc.createElement('a');
+    a.className = cls || 'debug-link';
+    a.href = '?debug' + query;
+    a.textContent = text;
+    return a;
+  }
+
   if (DEBUG && params.get('play')) {
     const id = params.get('play');
     const tier = Number(params.get('tier') || 1);
@@ -567,9 +577,42 @@
       box.className = 'debug';
       box.textContent = JSON.stringify(res, null, 1) + '\n\n軸への点数\n' +
         BKF.axes.map(function (a, i) { return a.label + ' ' + vec[i].toFixed(2); }).filter(function (s, i) { return vec[i] !== 0; }).join('\n');
+      const nav = doc.createElement('div');
+      nav.className = 'debug-nav';
+      nav.appendChild(debugLink('もういちど', '&games&play=' + id + '&tier=' + tier));
+      nav.appendChild(debugLink('ゲームを えらびなおす', '&games'));
+      $('game-done').appendChild(nav);
       $('game-done').appendChild(box);
       $('game-done').hidden = false;
       root.BKF.lastGame = res;
     });
+  } else if (DEBUG && params.has('games')) {
+    const list = $('debug-game-list');
+    const disabled = BKF.config.disabledGames || [];
+    list.innerHTML = '';
+    Object.keys(BKF.gameDefs).forEach(function (id) {
+      const def = BKF.gameDefs[id];
+      const li = doc.createElement('li');
+      const off = !def.enabled ? '（enabled: false）' : disabled.indexOf(id) !== -1 ? '（disabledGames で停止中）' : '';
+      li.innerHTML = '<span class="debug-game-name">' + def.icon + ' ' + U.escapeHtml(def.title) +
+        ' <small>' + id + U.escapeHtml(off) + '</small></span>';
+      const tiers = doc.createElement('span');
+      tiers.className = 'debug-game-tiers';
+      BKF.tiers.forEach(function (t) {
+        const a = debugLink('', '&games&play=' + id + '&tier=' + t.id, 'debug-tier');
+        a.innerHTML = t.label + '<br><small>' + def.time[t.id] + 'びょう</small>';
+        if (t.id < def.minTier) {
+          a.removeAttribute('href');
+          a.classList.add('off');
+          a.title = 'この難易度では出ない';
+        }
+        tiers.appendChild(a);
+      });
+      li.appendChild(tiers);
+      list.appendChild(li);
+    });
+    show('screen-debug-games');
   }
+  // トップ画面からも一覧へ行けるようにする
+  if (DEBUG) $('top-debug').hidden = false;
 })(window);

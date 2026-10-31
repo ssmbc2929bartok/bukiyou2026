@@ -62,6 +62,17 @@
           <p><a href="privacy.html">プライバシーポリシー</a></p>
         </div>
         <p class="app-version" data-version></p>
+        <p class="top-debug" id="top-debug" hidden><a href="?debug&amp;games">ミニゲームを えらんで あそぶ（デバッグ）</a></p>
+      </div>
+    </section>
+
+    <!-- ?debug&games：ミニゲームを えらんで あそぶ（確認用。データは送らない） -->
+    <section id="screen-debug-games" class="screen" data-bg="sky" hidden aria-labelledby="debug-games-title">
+      <div class="survey debug-games">
+        <h1 id="debug-games-title">ミニゲームを えらぶ（デバッグ）</h1>
+        <p class="debug-games-note">難易度を押すと、そのゲームだけを遊べます。<br>結果は送りません。<br>制限時間は js/data/games.js の time です。</p>
+        <ul class="debug-game-list" id="debug-game-list"></ul>
+        <p><a class="debug-link" href="?debug">トップへ もどる</a></p>
       </div>
     </section>
 
@@ -106,13 +117,14 @@
           <h1 id="game-title"></h1>
           <p class="game-company" id="game-company"></p>
           <p class="game-howto" id="game-howto"></p>
+          <p class="game-time" id="game-time"></p>
           <div class="game-demo" id="game-demo" aria-hidden="true"></div>
           <button type="button" class="submit" id="game-start">はじめる！</button>
         </div>
         <div class="game-play" id="game-play" hidden>
           <div class="game-top">
             <span class="game-tier small" id="game-tier-play"></span>
-            <div class="game-timer" aria-hidden="true"><div class="game-timer-bar" id="game-timer-bar"></div></div>
+            <div class="game-timer" role="timer" aria-label="のこり じかん"><span class="game-timer-icon" aria-hidden="true">⏱ のこり</span> <span class="game-timer-num" id="game-timer-num"></span> びょう</div>
             <button type="button" class="game-skip" id="game-skip">とばす</button>
           </div>
           <div class="game-stage" id="game-stage"></div>
