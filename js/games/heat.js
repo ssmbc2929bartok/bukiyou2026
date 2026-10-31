@@ -2,26 +2,39 @@
  * 温度キープ（朝日熱処理工業）
  * ハンドルを回すと温度が上がり、止めると下がる。緑のゾーンに保つ。
  *   回す速さ ω（1秒あたりの回転数）で落ち着く温度は 20 + 600ω ℃。
- *   目標に必要な速さは毎回ランダム：初級 0.3〜0.5 / 中級 0.5〜1.0 / 上級 0.8〜1.5
+ *   目標に必要な速さは毎回ランダム：初級 0.8〜1.5 / 中級 0.5〜1.0 / 上級 1.0〜1.4 → 0.55〜0.8 → 0.3〜0.45
+ *   （ゆっくり一定に回し続けるほうが難しいので、上級ほど遅くする）
+ *   上級は20秒で、10秒目と15秒目に目標の温度が変わる（速い → ふつう → 遅い）。
+ *   変わったあとの2秒は、合わせる時間として zone に数えない。
  *   zone : 3秒以降でゾーン内にいた時間の割合 → こつこつ（＋）
  *   over : ゾーンの上を行き過ぎた最大の幅（ゾーンの幅を 1 とする）→ ていねい（−）
  */
 (function (root) {
   'use strict';
   const BKF = root.BKF;
-  const RANGE = [[0.3, 0.5], [0.5, 1.0], [0.8, 1.5]];
+  const RANGE = [[0.8, 1.5], [0.5, 1.0]];   // 初級・中級（上級は STAGES）
   const ROOM = 20;
   const GAIN = 600;
   const HALF = 60;        // ゾーンの半分の幅（℃）
   const MAX_T = 1100;     // 温度計の上限
   const TAU = 0.8;        // 温度が追いつく速さ（秒）
   const WARMUP = 3;
+  // 上級：目標が変わる時刻（秒）と、それぞれの区間の速さ
+  const STAGES = [
+    { at: 0, range: [1.0, 1.4] },
+    { at: 10, range: [0.55, 0.8] },
+    { at: 15, range: [0.3, 0.45] },
+  ];
+  const GRACE = 2;        // 目標が変わったあと、数えない時間（秒）
 
   BKF.games.register('heat', {
     start: function (ctx) {
-      const r = RANGE[ctx.tier];
-      const omegaTarget = ctx.rand(r[0], r[1]);
-      const target = ROOM + GAIN * omegaTarget;
+      const plan = (ctx.tier === 2 ? STAGES : [{ at: 0, range: RANGE[ctx.tier] }]).map(function (st) {
+        const omega = ctx.rand(st.range[0], st.range[1]);
+        return { at: st.at, omega: omega, target: ROOM + GAIN * omega };
+      });
+      let stage = 0;
+      let target = plan[0].target;
 
       const furnace = ctx.el('div', 'furnace');
       const glow = ctx.el('div', 'furnace-glow', furnace);
@@ -29,7 +42,10 @@
       const thermo = ctx.el('div', 'thermo');
       const zone = ctx.el('div', 'thermo-zone', thermo);
       const fill = ctx.el('div', 'thermo-fill', thermo);
-      zone.style.bottom = ((target - HALF) / MAX_T * 100) + '%';
+      function placeZone() {
+        zone.style.bottom = ((target - HALF) / MAX_T * 100) + '%';
+      }
+      placeZone();
       zone.style.height = (HALF * 2 / MAX_T * 100) + '%';
       const hint = ctx.el('div', 'heat-hint', null, 'ぐるぐる まわそう！');
       const handle = ctx.el('div', 'handle');
@@ -81,7 +97,15 @@
         temp = Math.max(ROOM, Math.min(MAX_T, temp));
 
         const t = ctx.elapsed();
-        if (t >= WARMUP) {
+        if (stage + 1 < plan.length && t >= plan[stage + 1].at) {
+          stage++;
+          target = plan[stage].target;
+          zone.classList.add('moving');
+          placeZone();
+          ctx.pop('おんどが かわったよ！', ctx.width() / 2, ctx.height() * 0.3);
+        }
+        const since = t - plan[stage].at;
+        if (t >= WARMUP && (stage === 0 || since >= GRACE)) {
           counted += dt;
           if (Math.abs(temp - target) <= HALF) inZone += dt;
           maxOver = Math.max(maxOver, temp - (target + HALF));
@@ -102,8 +126,8 @@
           return {
             zone: counted > 0 ? inZone / counted : 0,
             over: Math.max(0, maxOver) / (HALF * 2),
-            target: Math.round(target),
-            omega: Math.round(omegaTarget * 100) / 100,
+            target: plan.map(function (p) { return Math.round(p.target); }).join('/'),
+            omega: plan.map(function (p) { return Math.round(p.omega * 100) / 100; }).join('/'),
           };
         },
       };

@@ -99,6 +99,18 @@
   }
 }
 
+.game-tier-note {
+  margin: 6px auto 0;
+  padding: 4px 12px;
+  max-width: 22em;
+  border-radius: 10px;
+  background: #fff3cd;
+  color: #8a5a00;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
 .game-time {
   margin-top: 6px;
   color: #1766b3;
@@ -282,7 +294,8 @@
   font-size: 60px;
   line-height: 64px;
   text-align: center;
-  transform: rotate(45deg);
+  /* 口（ねじをつかむ側）を下のねじに向ける */
+  transform: rotate(225deg);
   will-change: left;
 }
 
@@ -291,7 +304,7 @@
 }
 
 @keyframes wrench-down {
-  50% { transform: rotate(45deg) translate(12px, 12px); }
+  50% { transform: rotate(225deg) translate(-12px, -12px); }
 }
 
 .screw-guide {
@@ -416,6 +429,16 @@
   background: rgba(6, 214, 160, 0.45);
   border-top: 2px solid #06d6a0;
   border-bottom: 2px solid #06d6a0;
+}
+
+/* 上級で目標の温度が変わるとき、みどりの ところを動かして見せる */
+.thermo-zone.moving {
+  transition: bottom 0.6s ease;
+  animation: zone-blink 0.5s ease 3;
+}
+
+@keyframes zone-blink {
+  50% { background: rgba(255, 209, 102, 0.8); }
 }
 
 .thermo-fill {
@@ -1296,5 +1319,430 @@
   .tilt-note {
     margin-bottom: 2px;
     font-size: 14px;
+  }
+}
+
+/* ---------- 動く遊び方（js/games/howto.js、js/data/howto.js） ---------- */
+
+.howto {
+  max-width: 340px;
+  margin: 4px auto 10px;
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.howto-track {
+  display: flex;
+  transition: transform 0.35s ease;
+}
+
+.howto-card {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+/* 場面は 横2:縦1。低い画面では小さくする */
+.howto-scene {
+  position: relative;
+  width: min(100%, 300px, 42vh);
+  aspect-ratio: 2 / 1;
+  margin: 0 auto;
+  border-radius: 14px;
+  background: #f3f9ff;
+  box-shadow: inset 0 0 0 2px #cfe3f5;
+  overflow: hidden;
+}
+
+.howto-svg {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.howto-caption {
+  min-height: 2.8em;
+  margin-top: 6px;
+  color: #355070;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.howto-dots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.howto-dot {
+  width: 22px;
+  height: 18px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.howto-dot::before {
+  content: '';
+  display: block;
+  width: 9px;
+  height: 9px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #cfe3f5;
+}
+
+.howto-dot.on::before {
+  background: #1e88e5;
+}
+
+.howto-part,
+.howto-ripple,
+.howto-finger {
+  position: absolute;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+.howto-part {
+  font-size: 22px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.howto-finger {
+  z-index: 5;
+  translate: -42% -6%;
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+}
+
+.howto-ripple {
+  z-index: 4;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(30, 136, 229, 0.75);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+/* 場面の部品 */
+.hd-pop {
+  z-index: 3;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 0 #cfe3f5;
+  color: #1766b3;
+  font-size: 13px;
+  font-weight: 900;
+  opacity: 0;
+}
+
+.hd-pop.good {
+  color: #2a9d8f;
+}
+
+.hd-screw {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f1f3f5, #adb5bd);
+}
+
+.hd-screw::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 12px;
+  height: 4px;
+  border-radius: 2px;
+  background: #495057;
+}
+
+.hd-wrench {
+  rotate: 225deg;
+}
+
+.hd-cell,
+.hd-tile,
+.hd-key,
+.hd-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.hd-cell {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #8ecae6;
+  border-radius: 6px;
+  background: #fff;
+  color: #1766b3;
+  font-size: 18px;
+}
+
+.hd-letter {
+  z-index: 2;
+  color: #1766b3;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.hd-tile {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #ffd166;
+  box-shadow: 0 2px 0 #e0a800;
+  color: #5b4636;
+  font-size: 17px;
+}
+
+.hd-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 42px;
+  border: 2px solid #cfe3f5;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 20px;
+}
+
+.hd-card.back {
+  border-color: #4ea8de;
+  background: #4ea8de;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.hd-shape {
+  width: 30%;
+  aspect-ratio: 1;
+  border: 3px dashed #adb5bd;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.hd-sample {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #5b7590;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hd-sample i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ef476f;
+}
+
+.hd-color {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #ef476f;
+  box-shadow: 0 0 0 1px #cfe3f5;
+}
+
+.hd-color.blue { background: #4ea8de; }
+.hd-color.yellow { background: #ffd166; }
+
+.hd-ring {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #1766b3;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.hd-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #1e88e5;
+  box-shadow: 0 2px 0 #1565c0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.hd-btn.wide {
+  padding: 6px 22px;
+  font-size: 13px;
+}
+
+.hd-bowl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #5b7590;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hd-bowl i {
+  width: 44px;
+  height: 22px;
+  border: 3px solid #cfd8e3;
+  border-top-width: 2px;
+  border-radius: 4px 4px 24px 24px;
+  background: #fff;
+}
+
+.hd-jar {
+  width: 22px;
+  height: 28px;
+  border-radius: 6px 6px 8px 8px;
+  background: #e63946;
+  box-shadow: inset 0 5px 0 rgba(255, 255, 255, 0.5);
+}
+
+.hd-jar.yellow { background: #ffd166; }
+.hd-jar.blue { background: #4361ee; }
+
+.hd-thermo {
+  width: 22px;
+  height: 72%;
+  border: 3px solid #cfd8e3;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* みどりの ところ（温度計の中の位置） */
+.hd-thermo i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 64%;
+  height: 20%;
+  background: rgba(6, 214, 160, 0.45);
+}
+
+.hd-thermo-fill {
+  z-index: 2;
+  width: 10px;
+  translate: -50% -100%;
+  border-radius: 5px;
+  background: #ef476f;
+}
+
+.hd-handle {
+  width: 58px;
+  height: 58px;
+  border: 4px solid #adb5bd;
+  border-radius: 50%;
+  background: #f1f3f5;
+}
+
+.hd-handle i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 22px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: #6c757d;
+  transform-origin: 50% 0;
+  rotate: 180deg;
+}
+
+.hd-handle i::after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e85d04;
+}
+
+.hd-dot {
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #ef476f;
+  box-shadow: 0 0 0 1px #cfe3f5;
+}
+
+.hd-dot.blue { background: #1e88e5; }
+
+.hd-img img {
+  display: block;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.hd-block {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: #ffd166;
+  color: #5b4636;
+  font-size: 16px;
+}
+
+.hd-key {
+  width: 30px;
+  height: 28px;
+  border: 2px solid #cfe3f5;
+  border-radius: 8px;
+  background: #fff;
+  color: #1766b3;
+  font-size: 16px;
+}
+
+.hd-count {
+  color: #e63946;
+  font-size: 22px;
+  font-weight: 900;
+  opacity: 0;
+}
+
+/* 動く説明があるときは、説明画面のアイコンを小さくする */
+.game-intro.has-howto .game-icon {
+  margin-top: 6px;
+  font-size: 44px;
+}
+
+.game-intro.has-howto .game-howto {
+  margin: 8px 0 2px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+@media (max-height: 720px) {
+  .game-intro.has-howto .game-icon {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .howto-track {
+    transition: none;
   }
 }

@@ -1,8 +1,9 @@
 /*
  * 跳ね返し（アクテック）
  * 真ん中のケースに向かって飛んでくる道具をタップして跳ね返す。ケースに3回当たったら終わり。
- *   ケースに届くまでの時間：初級 3秒 / 中級 2〜3秒 / 上級 1.5〜3秒（道具ごとにランダム、上級は曲がるものも）
- *   同時に飛んでくる数：初級1 / 中級2 / 上級3。後半ほど飛んでくる間隔が短くなる。
+ *   ケースに届くまでの時間：初級 2.5〜3秒 / 中級 1.6〜2.4秒 / 上級 1.1〜2秒（道具ごとにランダム）
+ *   同時に飛んでくる数：初級2 / 中級3 / 上級4。後半ほど飛んでくる間隔が短くなる。
+ *   曲がって飛ぶもの：中級 15% / 上級 40%
  *   survive : 守れた時間（秒）→ こつこつ（＋）
  *   decline : 前半と後半の、跳ね返せた割合の差（前半−後半）→ こつこつ（−）
  *   empty   : 何もない所をタップした回数 → チャレンジ（＋）
@@ -10,8 +11,11 @@
 (function (root) {
   'use strict';
   const BKF = root.BKF;
-  const TRAVEL = [[3, 3], [2, 3], [1.5, 3]];
-  const MAX_AT_ONCE = [1, 2, 3];
+  // 「上級でも簡単そう」という声があったので、v2.4.0 で速く・多くした（前は 3秒・2〜3秒・1.5〜3秒、1・2・3個）
+  const TRAVEL = [[2.5, 3], [1.6, 2.4], [1.1, 2]];   // ケースに届くまでの秒数
+  const MAX_AT_ONCE = [2, 3, 4];                     // 同時に飛んでくる数
+  const GAP = [[1.4, 0.8], [1.1, 0.6], [0.9, 0.45]];  // 次が出るまでの秒数 [はじめ, おわり]
+  const CURVE = [0, 0.15, 0.4];                      // 曲がって飛ぶものの割合
   const LIVES = 3;
   const TOOLS = ['🔨', '🔧', '🔩'];
 
@@ -42,7 +46,7 @@
         const sx = cx + Math.cos(ang) * dist;
         const sy = cy + Math.sin(ang) * dist;
         const range = TRAVEL[ctx.tier];
-        const curve = ctx.tier === 2 && Math.random() < 0.3;
+        const curve = Math.random() < CURVE[ctx.tier];
         const el = ctx.el('div', 'tool', null, ctx.pick(TOOLS));
         tools.push({
           el: el, sx: sx, sy: sy, born: t, travel: ctx.rand(range[0], range[1]),
@@ -67,8 +71,9 @@
         if (deadAt !== null) return;
         const elapsed = ctx.elapsed();
         const flying = tools.filter(function (tl) { return tl.state === 'fly'; }).length;
-        // 後半ほど間隔を短く（1.6秒 → 0.8秒）
-        const gap = 1.6 - 0.8 * Math.min(1, elapsed / ctx.limit);
+        // 後半ほど間隔を短く
+        const g = GAP[ctx.tier];
+        const gap = g[0] - (g[0] - g[1]) * Math.min(1, elapsed / ctx.limit);
         if (elapsed >= nextSpawn && flying < MAX_AT_ONCE[ctx.tier]) {
           spawn(t);
           nextSpawn = elapsed + gap;

@@ -117,6 +117,7 @@
           <h1 id="game-title"></h1>
           <p class="game-company" id="game-company"></p>
           <p class="game-howto" id="game-howto"></p>
+          <p class="game-tier-note" id="game-tier-note" hidden></p>
           <p class="game-time" id="game-time"></p>
           <div class="game-demo" id="game-demo" aria-hidden="true"></div>
           <button type="button" class="submit" id="game-start">はじめる！</button>
@@ -183,6 +184,17 @@
   </div>
 
   <!-- 傾きが使えず、ゲームを変えるときのお知らせ -->
+  <!-- 質問のとちゅうでミニゲームに変わるときの「ミニゲーム！」 -->
+  <div class="game-call" id="game-call" role="status" aria-live="polite" hidden>
+    <div class="game-call-burst" aria-hidden="true"></div>
+    <div class="game-call-inner">
+      <div class="game-call-icons" aria-hidden="true"><span>🎮</span><span>⭐</span><span>🎉</span></div>
+      <p class="game-call-title">ミニゲーム！</p>
+      <p class="game-call-sub">しつもんは ちょっと おやすみ</p>
+      <p class="game-call-count" id="game-call-count"></p>
+    </div>
+  </div>
+
   <div class="modal" id="popup-game-change" hidden>
     <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="game-change-title" aria-describedby="game-change-text">
       <div class="modal-emoji" aria-hidden="true">📱</div>
@@ -220,10 +232,12 @@
   <script src="js/data/crossword.js"></script>
   <script src="js/data/circuit.js"></script>
   <script src="js/data/memory.js"></script>
+  <script src="js/data/howto.js"></script>
   <script src="js/util.js"></script>
   <script src="js/diagnosis.js"></script>
   <script src="js/api.js"></script>
   <script src="js/games/core.js"></script>
+  <script src="js/games/howto.js"></script>
   <script src="js/games/screw.js"></script>
   <script src="js/games/crossword.js"></script>
   <script src="js/games/memory.js"></script>
