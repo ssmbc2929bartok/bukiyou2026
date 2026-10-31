@@ -146,6 +146,11 @@
   -webkit-touch-callout: none;
 }
 
+/* クロスワードは、盤・会社の説明つきのヒント・文字ボタンを縦に並べるので、画面の下まで使う */
+.game-stage.game-crossword {
+  height: max(360px, min(calc(100dvh - 120px), 620px));
+}
+
 .game-stage canvas {
   position: absolute;
   inset: 0;
@@ -1043,6 +1048,7 @@
   position: absolute;
   left: 8px;
   right: 8px;
+  overflow: hidden;
   padding: 6px 10px;
   border-radius: 10px;
   background: #fff;
@@ -1052,6 +1058,15 @@
   line-height: 1.9;
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+
+/* 会社の名前を当てる言葉のときに添える、どんな会社かの説明 */
+.cw-hint-co {
+  display: block;
+  margin-top: 2px;
+  color: #5b7590;
+  font-size: 0.86em;
+  line-height: 1.75;
 }
 
 .cw-hint-emoji {
