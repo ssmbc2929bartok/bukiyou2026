@@ -370,11 +370,24 @@
 
     robot: [
       {
+        // なにをするゲームかを、さいしょに見せる（ゴールの たてものまで ロボットを うごかす）
+        caption: 'ロボットを ゴールの たてものまで うごかそう',
+        dur: 3200,
+        parts: [
+          { html: '<img src="assets/img/robot.png" alt="">', cls: 'hd-img', x: 20, y: 34 },
+          { html: '<img src="assets/img/oit-tower.webp" alt="">', cls: 'hd-img', x: 80, y: 34, kf: bump(0.55) },
+          { html: 'ゴール', cls: 'hd-goal', x: 80, y: 58 },
+          { html: '→ → →', cls: 'hd-pop', x: 50, y: 34, kf: appear(0.15, 0.95) },
+          { html: 'ゴールを めざそう！', cls: 'hd-pop good', x: 50, y: 84, kf: appear(0.55, 0.95) },
+        ],
+      },
+      {
         caption: 'やじるしを タップして ならべる',
         dur: 3600,
         parts: [
           { html: '<img src="assets/img/robot.png" alt="">', cls: 'hd-img', x: 20, y: 28 },
           { html: '<img src="assets/img/oit-tower.webp" alt="">', cls: 'hd-img', x: 80, y: 28 },
+          { html: 'ゴール', cls: 'hd-goal', x: 80, y: 52 },
           { html: '→', cls: 'hd-block', x: 40, y: 58, kf: appear(0.25) },
           { html: '→', cls: 'hd-block', x: 52, y: 58, kf: appear(0.5) },
           { html: '↑', cls: 'hd-key', x: 26, y: 88 },
@@ -390,12 +403,34 @@
         parts: [
           { html: '<img src="assets/img/robot.png" alt="">', cls: 'hd-img', x: 20, y: 28, kf: move([[20, 28, 0], [20, 28, 0.3], [50, 28, 0.5], [80, 28, 0.7], [80, 28, 1]]) },
           { html: '<img src="assets/img/oit-tower.webp" alt="">', cls: 'hd-img', x: 80, y: 28 },
+          { html: 'ゴール', cls: 'hd-goal', x: 80, y: 52 },
           { html: '→', cls: 'hd-block', x: 40, y: 58 },
           { html: '→', cls: 'hd-block', x: 52, y: 58 },
           { html: 'ぜんぶ じっこう', cls: 'hd-btn wide', x: 50, y: 88, kf: bump(0.22) },
           { html: 'ゴール！', cls: 'hd-pop good', x: 80, y: 6, kf: appear(0.72, 0.95) },
         ],
         finger: [[70, 99, 0], [52, 92, 0.18], [52, 88, 0.22, 'tap'], [70, 99, 0.45]],
+      },
+      {
+        // 「1つずつ」を押すたびに、やじるしが1つずつ光って、ロボットが1マスずつ進む
+        caption: '「1つずつ」なら、1こずつ うごいて たしかめられるよ',
+        dur: 4400,
+        parts: [
+          { html: '<img src="assets/img/robot.png" alt="">', cls: 'hd-img', x: 20, y: 28, kf: move([[20, 28, 0], [20, 28, 0.2], [50, 28, 0.32], [50, 28, 0.58], [80, 28, 0.7], [80, 28, 1]]) },
+          { html: '<img src="assets/img/oit-tower.webp" alt="">', cls: 'hd-img', x: 80, y: 28 },
+          { html: 'ゴール', cls: 'hd-goal', x: 80, y: 52 },
+          { html: '→', cls: 'hd-block', x: 40, y: 58, kf: paintAt(0.2, '#ffd166', '#06d6a0') },
+          { html: '→', cls: 'hd-block', x: 52, y: 58, kf: paintAt(0.58, '#ffd166', '#06d6a0') },
+          { html: '1つずつ', cls: 'hd-btn wide', x: 50, y: 88, kf: [
+            { offset: 0, transform: 'scale(1)' }, { offset: 0.18, transform: 'scale(1)' }, { offset: 0.2, transform: 'scale(1.15)' },
+            { offset: 0.24, transform: 'scale(1)' }, { offset: 0.56, transform: 'scale(1)' }, { offset: 0.58, transform: 'scale(1.15)' },
+            { offset: 0.62, transform: 'scale(1)' }, { offset: 1, transform: 'scale(1)' },
+          ] },
+          { html: '1こめ', cls: 'hd-pop', x: 50, y: 6, kf: appear(0.22, 0.5) },
+          { html: '2こめ', cls: 'hd-pop', x: 50, y: 6, kf: appear(0.6, 0.72) },
+          { html: 'ゴール！', cls: 'hd-pop good', x: 80, y: 6, kf: appear(0.72, 0.95) },
+        ],
+        finger: [[70, 99, 0], [52, 92, 0.15], [52, 88, 0.2, 'tap'], [62, 96, 0.38], [52, 92, 0.52], [52, 88, 0.58, 'tap'], [70, 99, 0.8]],
       },
     ],
 

@@ -130,7 +130,7 @@
     },
     robot: {
       title: 'ロボットを うごかそう', company: '大阪工業大学', icon: '🤖',
-      howto: 'やじるしを ならべて、ロボットを ゴールまで うごかそう！',
+      howto: 'ロボットを ゴールの たてものまで うごかそう！ やじるしを ならべてね',
       enabled: true, minTier: 0, time: [45, 45, 60],
       metrics: {
         retries: { axis: { logic: -2 }, base: [[1, 1.2], [1.5, 1.5], [2, 1.5]] },

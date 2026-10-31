@@ -115,7 +115,11 @@
       for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
           const el = ctx.el('div', 'robot-cell' + (walls[r + ',' + c] ? ' wall' : ''), board);
-          if (r === goal[0] && c === goal[1]) el.innerHTML = '<img src="assets/img/oit-tower.webp" alt="ゴール">';
+          // ゴールのマス：たてものの絵に「ゴール」と書いて、どこへ向かうのかを分かるようにする
+          if (r === goal[0] && c === goal[1]) {
+            el.classList.add('goal');
+            el.innerHTML = '<img src="assets/img/oit-tower.webp" alt=""><span class="robot-goal-label">ゴール</span>';
+          }
         }
       }
       const sprite = ctx.el('img', 'robot-sprite', board);
