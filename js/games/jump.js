@@ -2,7 +2,7 @@
  * 全員ジャンプ（枚方信用金庫）
  * 「3、2、1、ジャンプ！」に合わせてボタンを押す。3回。全難易度共通。
  * 3回目は1人が画面の外から「まって〜」と走ってきて、「ジャンプ！」の0.8秒後に着く。
- * ほかの仲間は待って、着いたら全員で跳ぶ。
+ * ほかの仲間は待って、着いたら「せーの！」で、少しあとに「ジャンプ！」で全員で跳ぶ（せーの は3回目だけ）。
  *   sync   : 1〜2回目のずれ（ミリ秒）の平均 → なかよし（−）
  *   waited : 3回目に、仲間が着くのを待って一緒に跳んだら 1 → なかよし（＋）
  */
@@ -11,6 +11,7 @@
   const BKF = root.BKF;
   const BEAT = 800;          // 「3」「2」「1」の間隔
   const LATE = 800;          // 3回目に仲間が遅れる時間
+  const SENO = 700;          // 3回目：仲間が着いて「せーの！」から、みんなが跳ぶまで
   const WINDOW = 1500;       // 跳ぶ時間のあと、押すのを待つ時間
   const FRIENDS = ['🐻', '🐰', '🐱', '🐶'];
 
@@ -65,7 +66,8 @@
         const third = round === 3;
         const start = performance.now();
         const jumpAt = start + BEAT * 3;
-        const groupAt = third ? jumpAt + LATE : jumpAt;
+        const arriveAt = jumpAt + LATE;
+        const groupAt = third ? arriveAt + SENO : jumpAt;
 
         if (third) {
           // 走ってくる仲間は画面の外から
@@ -81,8 +83,15 @@
           ctx.after(BEAT * i, function () { count.textContent = n; });
         });
         ctx.after(BEAT * 3, function () { count.textContent = 'ジャンプ！'; });
+        if (third) {
+          // 仲間が着いたら「せーの！」
+          ctx.after(arriveAt - start, function () {
+            runner.innerHTML = FRIENDS[runnerIndex];
+            count.textContent = 'せーの！';
+          });
+        }
         ctx.after(groupAt - start, function () {
-          if (third) runner.innerHTML = FRIENDS[runnerIndex];
+          if (third) count.textContent = 'ジャンプ！';
           els.forEach(function (el, i) { if (order[i] !== 'me') hop(el); });
         });
         ctx.after(groupAt - start + WINDOW, function () {
