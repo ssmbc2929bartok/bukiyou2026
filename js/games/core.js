@@ -78,6 +78,9 @@
     const note = def.tierNote && def.tierNote[tier];
     $('game-tier-note').textContent = note || '';
     $('game-tier-note').hidden = !note;
+    $('game-guardian').textContent = def.guardian || '';
+    $('game-guardian').hidden = !def.guardian;
+    $('game-intro').classList.toggle('has-guardian', Boolean(def.guardian));
     $('game-time').textContent = def.time ? '⏱ じかんは ' + def.time[tier] + 'びょう' : (def.timeNote || '');
     $('game-tier').textContent = BKF.tiers[tier].label;
     $('game-tier-play').textContent = BKF.tiers[tier].label;

@@ -1785,6 +1785,65 @@
 .hd-jar.black { background: #2d2d2d; }
 .hd-jar.green { background: #3cb44b; }
 
+/* 説明画面の「はじめる！」の下に出す、保護者向けの文 */
+.game-guardian {
+  margin-top: 8px;
+  color: #6c757d;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.6;
+  text-align: left;
+}
+
+@media (max-height: 580px) {
+  .game-guardian {
+    margin-top: 5px;
+    font-size: 10px;
+    line-height: 1.45;
+  }
+  /* 保護者向けの文があるゲームは、説明の絵を少し小さくして1画面に収める */
+  .game-intro.has-guardian .howto-scene {
+    width: min(100%, 300px, 34vh);
+  }
+}
+
+/* ボールころがしの説明 */
+.hd-ball {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ef476f;
+}
+
+.hd-bar {
+  width: 46%;
+  height: 4px;
+  border-radius: 2px;
+  background: #8d99ae;
+}
+
+.hd-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 86%;
+  height: 32%;
+  border-radius: 6px;
+  background: #ced4da;
+  color: #495057;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.hd-phone i {
+  display: block;
+  width: 26px;
+  height: 46px;
+  border: 3px solid #2b2d42;
+  border-radius: 7px;
+  background: #fff;
+}
+
 /* なぞる線の説明：スタートの みどりの まる */
 .hd-start {
   width: 14px;
