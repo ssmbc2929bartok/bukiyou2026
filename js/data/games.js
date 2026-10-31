@@ -47,6 +47,7 @@
     crossword: {
       title: 'クロスワード', company: '不器用ファクトリー', icon: '🔤',
       howto: 'マスを えらんで、したの もじで うめよう！',
+      tierNote: [null, 'ヒントとして えが かいて あるよ！', null],
       enabled: true, minTier: 1, time: [60, 60, 75],
       metrics: {
         correct: { axis: { logic: 2 }, base: [[0.6, 0.3], [0.6, 0.3], [0.6, 0.3]] },
