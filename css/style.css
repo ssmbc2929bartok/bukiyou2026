@@ -1036,6 +1036,111 @@ h1[tabindex="-1"]:focus {
   word-break: break-all;
 }
 
+/* 質問のとちゅうでミニゲームに変わるときの「ミニゲーム！」 */
+.game-call {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 45%, #fff6c9 0%, #ffd166 45%, #ff9f6e 100%);
+  cursor: pointer;
+}
+
+/* 後ろで回る光の すじ */
+.game-call-burst {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 180vmax;
+  height: 180vmax;
+  margin: -90vmax 0 0 -90vmax;
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.35) 0 10deg, transparent 10deg 20deg);
+}
+
+.game-call-inner {
+  position: relative;
+  text-align: center;
+}
+
+.game-call-icons {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  font-size: 44px;
+}
+
+.game-call-title {
+  margin-top: 6px;
+  color: #fff;
+  font-size: clamp(44px, 14vw, 72px);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  -webkit-text-stroke: 3px #e85d75;
+  paint-order: stroke fill;
+  text-shadow: 0 6px 0 #c43e5c;
+}
+
+.game-call-sub {
+  margin-top: 14px;
+  color: #7a3e12;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.game-call-count {
+  margin-top: 6px;
+  color: #7a3e12;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.game-call.play .game-call-burst {
+  animation: call-spin 6s linear infinite;
+}
+
+.game-call.play .game-call-title {
+  animation: call-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.game-call.play .game-call-icons span {
+  display: inline-block;
+  animation: call-hop 0.7s ease both;
+}
+
+.game-call.play .game-call-icons span:nth-child(2) { animation-delay: 0.1s; }
+.game-call.play .game-call-icons span:nth-child(3) { animation-delay: 0.2s; }
+
+.game-call.play .game-call-sub,
+.game-call.play .game-call-count {
+  animation: fade-in 0.4s 0.35s ease both;
+}
+
+@keyframes call-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes call-pop {
+  0% { transform: scale(0.2) rotate(-12deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-4deg); opacity: 1; }
+}
+
+@keyframes call-hop {
+  0% { transform: translateY(30px) scale(0.4); opacity: 0; }
+  60% { transform: translateY(-12px) scale(1.15); opacity: 1; }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-call.play .game-call-burst,
+  .game-call.play .game-call-title,
+  .game-call.play .game-call-icons span {
+    animation: none;
+  }
+}
+
 /* ?debug&games：ミニゲームを えらんで あそぶ */
 .top-debug {
   margin-top: 8px;

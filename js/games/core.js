@@ -73,17 +73,26 @@
     $('game-company').textContent = def.company + ' に ちなんだ ゲーム';
     $('game-title').textContent = def.title;
     $('game-howto').textContent = def.howto;
-    $('game-time').textContent = '⏱ じかんは ' + def.time[tier] + 'びょう';
+    // 難易度ごとのルール（例：温度キープの上級は途中で温度が変わる）
+    const note = def.tierNote && def.tierNote[tier];
+    $('game-tier-note').textContent = note || '';
+    $('game-tier-note').hidden = !note;
+    $('game-time').textContent = def.time ? '⏱ じかんは ' + def.time[tier] + 'びょう' : (def.timeNote || '');
     $('game-tier').textContent = BKF.tiers[tier].label;
     $('game-tier-play').textContent = BKF.tiers[tier].label;
-    const demo = $('game-demo');
-    demo.innerHTML = '';
-    if (impl.demo) impl.demo(demo);
-    else demo.innerHTML = '<div class="game-hand">👆</div>';
     $('game-intro').hidden = false;
     $('game-play').hidden = true;
     $('game-done').hidden = true;
     $('game-start').disabled = false;
+    // 動く説明：ゲームの demo か、指が操作して見せるカード（js/data/howto.js）。どちらもなければ指だけ
+    const demo = $('game-demo');
+    demo.innerHTML = '';
+    let howto = null;
+    const cards = BKF.howtoCards && BKF.howtoCards[id];
+    if (impl.demo) impl.demo(demo);
+    else if (cards && BKF.howto) howto = BKF.howto.render(demo, cards);
+    else demo.innerHTML = '<div class="game-hand">👆</div>';
+    $('game-intro').classList.toggle('has-howto', Boolean(howto));
 
     return new Promise(function (resolve) {
       $('game-start').onclick = function () {
@@ -99,6 +108,7 @@
       };
 
       function play(tiltOk) {
+        if (howto) howto.stop();
         $('game-intro').hidden = true;
         $('game-play').hidden = false;
         root.scrollTo(0, 0);
@@ -106,7 +116,7 @@
         const stage = $('game-stage');
         stage.innerHTML = '';
         stage.className = 'game-stage game-' + id;
-        const limit = def.time[tier];
+        const limit = def.time ? def.time[tier] : null;
         const listeners = [];
         const timeouts = [];
         let ended = false;
@@ -128,7 +138,7 @@
         }, true);
 
         function startTimer() {
-          if (timerStart) return;
+          if (timerStart || !limit) return;
           timerStart = performance.now();
           (function tick() {
             if (ended) return;
@@ -171,7 +181,9 @@
         }
 
         $('game-skip').onclick = function () { end('skip'); };
-        showTime(limit);
+        // 制限時間なし（time: null）のゲームは、のこり時間を出さない
+        $('game-timer-num').parentNode.style.visibility = limit ? '' : 'hidden';
+        if (limit) showTime(limit);
 
         const ctx = {
           stage: stage,

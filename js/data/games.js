@@ -4,7 +4,9 @@
  *   enabled : false にすると出なくなる（間に合わない・不具合があるとき）
  *             開催回ごとに止めるときは、ここではなく config.js の disabledGames に入れる
  *   minTier : 何の難易度から出すか（0 初級 / 1 中級 / 2 上級）
- *   time    : 制限時間（秒）。[初級, 中級, 上級]
+ *   time    : 制限時間（秒）。[初級, 中級, 上級]。null なら制限時間なし（ゲームが自分で終わる）
+ *   timeNote: 制限時間なしのとき、説明画面に出す終わり方
+ *   tierNote: 難易度ごとに、遊び方に足すひとこと [初級, 中級, 上級]（ないときは null）
  *   needs   : 'tilt' … スマホの傾きが必要
  *   metrics : 軸に入れる値
  *     axis : { 軸id: 重み }。値が“ふつう”より大きいほど、重みの向きにその軸が強くなる
@@ -36,7 +38,7 @@
     screw: {
       title: 'ねじしめ', company: '大豊製作所', icon: '🔩',
       howto: 'レンチが ねじの うえに きたら タップ！',
-      enabled: true, minTier: 0, time: [20, 20, 20],
+      enabled: true, minTier: 0, time: [25, 20, 20],
       metrics: {
         offset: { axis: { careful: -2 }, base: [[0.3, 0.15], [0.25, 0.12], [0.22, 0.1]] },
         early: { axis: { challenge: 2 }, base: same(1.5, 1.5) },
@@ -45,7 +47,7 @@
     crossword: {
       title: 'クロスワード', company: '不器用ファクトリー', icon: '🔤',
       howto: 'マスを えらんで、したの もじで うめよう！',
-      enabled: true, minTier: 1, time: [45, 45, 60],
+      enabled: true, minTier: 1, time: [60, 60, 75],
       metrics: {
         correct: { axis: { logic: 2 }, base: [[0.6, 0.3], [0.6, 0.3], [0.6, 0.3]] },
         sec: { axis: { logic: -1 }, base: [[40, 8], [40, 8], [55, 8]] },
@@ -54,7 +56,7 @@
     memory: {
       title: 'えあわせ', company: '枚方市', icon: '🃏',
       howto: 'おぼえて、おなじ えを 2まい そろえよう！',
-      enabled: true, minTier: 0, time: [30, 30, 30],
+      enabled: true, minTier: 0, time: [40, 35, 30],
       metrics: {
         misses: { axis: { careful: -2 }, base: [[2, 2], [3, 2.5], [5, 3]] },
       },
@@ -62,7 +64,7 @@
     trace: {
       title: 'せんを なぞろう', company: 'IFA住宅設計室', icon: '✏️',
       howto: 'おてほんの せんを ゆびで なぞろう！',
-      enabled: true, minTier: 0, time: [20, 20, 20],
+      enabled: true, minTier: 0, time: [30, 30, 30],
       metrics: {
         dev: { axis: { craft: -2 }, base: [[0.8, 0.4], [0.7, 0.35], [0.7, 0.35]] },
         cover: { axis: { careful: 1 }, base: [[0.7, 0.25], [0.8, 0.2], [0.8, 0.2]] },
@@ -71,7 +73,7 @@
     paint: {
       title: 'ぬりえ', company: 'ダイコロ', icon: '🎨',
       howto: 'おてほんと おなじ いろで ぬろう！',
-      enabled: true, minTier: 0, time: [30, 30, 30],
+      enabled: true, minTier: 0, time: [40, 35, 30],
       metrics: {
         outside: { axis: { careful: -2 }, base: [[0.2, 0.12], [0.15, 0.1], [0.12, 0.08]] },
         thin: { axis: { idea: 2 }, base: [[0.2, 0.3], [0.3, 0.35], [0.35, 0.35]] },
@@ -81,7 +83,7 @@
     cream: {
       title: 'クリームづくり', company: '香椎化学工業', icon: '🧴',
       howto: 'おてほんと おなじ いろの クリームを つくろう！',
-      enabled: true, minTier: 0, time: [30, 30, 30],
+      enabled: true, minTier: 0, time: [40, 35, 30],
       metrics: {
         first: { axis: { idea: 2 }, base: [[0.4, 0.3], [0.35, 0.3], [0.3, 0.3]] },
         tries: { axis: { challenge: 1 }, base: [[2, 1], [2.5, 1.2], [3, 1.5]] },
@@ -90,16 +92,17 @@
     heat: {
       title: 'おんどキープ', company: '朝日熱処理工業', icon: '🔥',
       howto: 'ハンドルを まわして、みどりの ところに たもとう！',
-      enabled: true, minTier: 0, time: [15, 15, 15],
+      tierNote: [null, null, 'とちゅうで おんどが 2かい かわるよ（10びょう・15びょう）'],
+      enabled: true, minTier: 0, time: [15, 15, 20],
       metrics: {
-        zone: { axis: { steady: 2 }, base: [[0.5, 0.25], [0.45, 0.25], [0.4, 0.25]] },
+        zone: { axis: { steady: 2 }, base: [[0.5, 0.25], [0.45, 0.25], [0.35, 0.25]] },
         over: { axis: { careful: -1 }, base: same(1, 1) },
       },
     },
     circuit: {
       title: 'かいろを つなごう', company: 'ノボル電機', icon: '🔌',
       howto: 'おなじ いろの てんを つなごう！ せんは まじわれないよ',
-      enabled: true, minTier: 0, time: [30, 30, 30],
+      enabled: true, minTier: 0, time: [40, 35, 30],
       metrics: {
         redraws: { axis: { challenge: 2, logic: -1 }, base: [[1, 1.5], [2, 2], [3, 2.5]] },
         solved: { axis: { logic: 2 }, base: [[0.7, 0.4], [0.5, 0.45], [0.4, 0.45]] },
@@ -116,7 +119,7 @@
     ball: {
       title: 'ボールころがし', company: 'サンエス工業', icon: '⚪',
       howto: 'スマホを たての まま ひだり・みぎに かたむけて、ボールを ゴールまで はこぼう！',
-      enabled: true, minTier: 0, time: [30, 30, 30], needs: 'tilt',
+      enabled: true, minTier: 0, time: [45, 45, 45], needs: 'tilt',
       metrics: {
         hiddenFails: { axis: { logic: -2 }, base: [[1, 1], [1.5, 1.2], [2, 1.5]] },
         walls: { axis: { careful: -1 }, base: same(3, 3) },
@@ -125,7 +128,7 @@
     robot: {
       title: 'ロボットを うごかそう', company: '大阪工業大学', icon: '🤖',
       howto: 'やじるしを ならべて、ロボットを ゴールまで うごかそう！',
-      enabled: true, minTier: 0, time: [30, 30, 45],
+      enabled: true, minTier: 0, time: [45, 45, 60],
       metrics: {
         retries: { axis: { logic: -2 }, base: [[1, 1.2], [1.5, 1.5], [2, 1.5]] },
         step: { axis: { challenge: 1, logic: -1 }, base: same(0.3, 0.4) },
@@ -135,7 +138,7 @@
     jump: {
       title: 'みんなで ジャンプ', company: '枚方信用金庫', icon: '🦘',
       howto: '「ジャンプ！」で みんなと いっしょに ボタンを おそう！',
-      enabled: true, minTier: 0, time: [20, 20, 20],
+      enabled: true, minTier: 0, time: null, timeNote: '3かい とんだら おわり',
       metrics: {
         sync: { axis: { social: -1 }, base: same(300, 150) },
         waited: { axis: { social: 2 }, base: same(0.5, 0.5) },
@@ -144,11 +147,11 @@
     bounce: {
       title: 'ケースを まもれ', company: 'アクテック', icon: '🧰',
       howto: 'とんでくる どうぐを タップして はねかえそう！',
-      enabled: true, minTier: 0, time: [30, 30, 30],
+      enabled: true, minTier: 0, time: [20, 20, 20],
       metrics: {
-        survive: { axis: { steady: 2 }, base: [[20, 8], [18, 8], [15, 8]] },
+        survive: { axis: { steady: 2 }, base: [[12, 5], [10, 5], [8, 4]] },
         decline: { axis: { steady: -1 }, base: same(0.1, 0.25) },
-        empty: { axis: { challenge: 1 }, base: same(3, 3) },
+        empty: { axis: { challenge: 1 }, base: same(2, 2) },
       },
     },
   };

@@ -155,6 +155,32 @@
 
   // ---------------------------------------------------------------- ミニゲーム
 
+  // 質問のとちゅうでゲームに変わるとき、「ミニゲーム！」と大きく出してから説明画面へ。
+  // 急にゲームの画面になると「なにこれ？」となりやすかったため。タップすれば すぐ進む。
+  function announceGame(step, then) {
+    const games = steps.filter(function (s) { return s.kind === 'game'; });
+    const box = $('game-call');
+    $('game-call-count').textContent = games.length > 1
+      ? (games.indexOf(step) + 1) + 'こめ ／ ぜんぶで ' + games.length + 'こ'
+      : '';
+    box.hidden = false;
+    box.classList.remove('play');
+    void box.offsetWidth;
+    box.classList.add('play');
+    let done = false;
+    function go() {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      box.hidden = true;
+      box.onclick = null;
+      then();
+    }
+    const reduce = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = setTimeout(go, reduce ? 1200 : 2000);
+    box.onclick = go;
+  }
+
   function runGame(step) {
     show('screen-game');
     BKF.games.run(step.gameId, state.tier).then(function (res) {
@@ -194,7 +220,7 @@
         state.stepIndex += direction === 'back' ? -1 : 1;
         renderStep(direction);
       } else {
-        runGame(step);
+        announceGame(step, function () { runGame(step); });
       }
       return;
     }
@@ -600,7 +626,7 @@
       tiers.className = 'debug-game-tiers';
       BKF.tiers.forEach(function (t) {
         const a = debugLink('', '&games&play=' + id + '&tier=' + t.id, 'debug-tier');
-        a.innerHTML = t.label + '<br><small>' + def.time[t.id] + 'びょう</small>';
+        a.innerHTML = t.label + '<br><small>' + (def.time ? def.time[t.id] + 'びょう' : 'じかん なし') + '</small>';
         if (t.id < def.minTier) {
           a.removeAttribute('href');
           a.classList.add('off');
