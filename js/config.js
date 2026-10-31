@@ -48,8 +48,8 @@
     //   paint ぬりえ / cream クリームづくり / heat おんどキープ / circuit かいろを つなごう /
     //   stone いしわり / ball ボールころがし / robot ロボットを うごかそう /
     //   jump みんなで ジャンプ / bounce ケースを まもれ
-    //   例：disabledGames: ['ball', 'jump'],
-    disabledGames: [jump, robot],
+    //   例：disabledGames: ['ball', 'jump'],（id は ' ' で囲む。囲まないとアプリ全体が動かなくなる）
+    disabledGames: ['jump', 'robot'],
 
     // 1回の送信を待つ時間（ミリ秒）。これを過ぎたら失敗として扱う。
     sendTimeoutMs: 8000,
