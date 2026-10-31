@@ -4,11 +4,11 @@
  */
 (function (root) {
   'use strict';
-  const BKF = root.BKF = root.BKF || {};
+  const BKF = (root.BKF = root.BKF || {});
 
   BKF.config = {
     // 版の番号。変えたら README の「バージョンと変更履歴」にも書く。画面の下とスプレッドシートに出る
-    appVersion: '2.1.1',
+    appVersion: '2.2.0',
 
     // 開催回の識別子。スプレッドシートの「eventId」列に入る。
     eventId: '2026-10',
@@ -39,9 +39,17 @@
     // ミニゲームの実験条件。開始時にランダムでどちらかにする（docs/games.md）。
     //   after : 何問目のあとにゲームを入れるか
     gameConditions: {
-      A: { after: [5] },
-      B: { after: [3, 6, 9] },
+      A: { after: [5, 10] },
+      B: { after: [5, 10] },
     },
+
+    // この回は出さないミニゲームの id（js/data/games.js）。空の配列なら全部のゲームを出す。
+    //   screw ねじしめ / crossword クロスワード / memory えあわせ / trace せんを なぞろう /
+    //   paint ぬりえ / cream クリームづくり / heat おんどキープ / circuit かいろを つなごう /
+    //   stone いしわり / ball ボールころがし / robot ロボットを うごかそう /
+    //   jump みんなで ジャンプ / bounce ケースを まもれ
+    //   例：disabledGames: ['ball', 'jump'],
+    disabledGames: [],
 
     // 1回の送信を待つ時間（ミリ秒）。これを過ぎたら失敗として扱う。
     sendTimeoutMs: 8000,
