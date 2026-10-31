@@ -11,11 +11,10 @@
   'use strict';
   const BKF = root.BKF;
 
-  // longHint : 5文字以上の長い言葉で、ほかの言葉と交わるのが1つ以下のものに、数に関係なく1文字埋めるか。
-  //            入れる・入れないを遊びくらべている（?debug&games&play=crossword&tier=2&longHint=0 で入れない）
+  // given : 最初から埋めておく字の上限（中級2つ・上級3つ。v2.3.0 で 1つ・2つ から増やした）
   const OPT = {
-    1: { W: 4, H: 4, count: 3, requireStar: false, given: 1, longHint: true },
-    2: { W: 6, H: 6, count: 4, requireStar: true, given: 2, longHint: true },
+    1: { W: 4, H: 4, count: 3, requireStar: false, given: 2 },
+    2: { W: 6, H: 6, count: 4, requireStar: true, given: 3 },
   };
 
   function shuffle(a) {
@@ -147,11 +146,11 @@
           return k;
         });
       });
-      // 最初から埋めておく字。
-      //   1. 5文字以上の長い言葉で、ほかの言葉と交わるのが1つ以下のものは、数に関係なく1文字ずつ
-      //   2. give の言葉（取りちがえやすい・むずかしい言葉）に、1つの言葉に1文字ずつ（必ず入れる）。
+      // 最初から埋めておく字。上限は 中級2つ・上級3つ（opt.given）。
+      //   1. give の言葉（取りちがえやすい・むずかしい言葉）に、1つの言葉に1文字ずつ（必ず入れる）。
       //      giveAt があれば、その場所の字を埋める（例 giveAt: [3] は3文字目）
-      //   3. 2 で埋めた字が 中級1つ・上級2つ に足りないときは、ほかの言葉の字で足す（1 で埋めた字は数に入れない）
+      //   2. 上限に届いていなければ、5文字以上の長い言葉に1文字ずつ
+      //   3. まだ届いていなければ、ほかの言葉に1文字ずつ
       // どれも、ほかの言葉と交わりの少ないマスを先に選ぶ（交わるマスを埋めると、2つの言葉のヒントになってしまう）。
       function giveCell(k) {
         cells[k].given = true;
@@ -161,24 +160,7 @@
         const fewest = Math.min.apply(null, keys.map(function (k) { return cells[k].words.length; }));
         return ctx.pick(keys.filter(function (k) { return cells[k].words.length === fewest; }));
       }
-      function crossings(w) {
-        const others = {};
-        w.keys.forEach(function (k) {
-          cells[k].words.forEach(function (wi) { if (puzzle.words[wi] !== w) others[wi] = true; });
-        });
-        return Object.keys(others).length;
-      }
       function hasGiven(w) { return w.keys.some(function (k) { return cells[k].given; }); }
-      let longHint = opt.longHint;
-      if (ctx.debug) {
-        const q = new URLSearchParams(root.location.search).get('longHint');
-        if (q !== null) longHint = q !== '0';
-      }
-      if (longHint) {
-        puzzle.words.forEach(function (w) {
-          if (w.chars.length >= 5 && crossings(w) <= 1 && !hasGiven(w)) giveCell(leastCrossed(w.keys));
-        });
-      }
       let givenCount = 0;
       ctx.shuffle(puzzle.words.filter(function (w) { return w.give; })).forEach(function (w) {
         if (w.giveAt) {
@@ -192,13 +174,16 @@
         giveCell(leastCrossed(w.keys));
         givenCount++;
       });
-      ctx.shuffle(puzzle.words.filter(function (w) { return !w.give; })).forEach(function (w) {
-        if (givenCount >= opt.given || w.keys.some(function (k) { return cells[k].given; })) return;
-        const lone = w.keys.filter(function (k) { return cells[k].words.length === 1; });
-        if (!lone.length) return;
-        giveCell(ctx.pick(lone));
-        givenCount++;
-      });
+      const rest = ctx.shuffle(puzzle.words.filter(function (w) { return !w.give; }));
+      rest.filter(function (w) { return w.chars.length >= 5; })
+        .concat(rest.filter(function (w) { return w.chars.length < 5; }))
+        .forEach(function (w) {
+          if (givenCount >= opt.given || hasGiven(w)) return;
+          const lone = w.keys.filter(function (k) { return cells[k].words.length === 1; });
+          if (!lone.length) return;
+          giveCell(ctx.pick(lone));
+          givenCount++;
+        });
       const open = Object.keys(cells).filter(function (k) { return !cells[k].given; });
 
       const gridEl = ctx.el('div', 'cw-grid');
@@ -344,8 +329,24 @@
         };
       }
 
+      // 時間切れのときは、正解を3秒見せる（カウントは出さない）。
+      // 合っていたマスはそのまま、まちがい・空いていたマスは正解の字を色を変えて出す
+      function reveal() {
+        Object.keys(cells).forEach(function (k) {
+          const cell = cells[k];
+          const right = cell.value === cell.answer;
+          cell.el.className = 'cw-cell' + (cell.given ? ' given' : right ? ' ok' : ' revealed');
+          const no = startNo[k];
+          cell.el.innerHTML = (no ? '<span class="cw-num">' + no + '</span>' : '') + cell.answer;
+        });
+        hintEl.style.fontSize = '';
+        hintEl.innerHTML = '<b>こたえは これだよ</b>';
+        tiles.style.opacity = '0.35';   // もう押せないので、うすくする
+        return 3000;
+      }
+
       selectWord(0);
-      return { end: metrics };
+      return { end: metrics, reveal: reveal };
     },
   });
 })(typeof window !== 'undefined' ? window : globalThis);

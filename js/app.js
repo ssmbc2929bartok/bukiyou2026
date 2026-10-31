@@ -607,7 +607,7 @@
       const nav = doc.createElement('div');
       nav.className = 'debug-nav';
       const again = debugLink('もういちど', '');
-      again.href = root.location.search;   // longHint=0 などの設定もそのまま
+      again.href = root.location.search;   // 同じゲーム・難易度でもういちど
       nav.appendChild(again);
       nav.appendChild(debugLink('ゲームを えらびなおす', '&games'));
       $('game-done').appendChild(nav);
@@ -638,13 +638,6 @@
         tiers.appendChild(a);
       });
       li.appendChild(tiers);
-      // クロスワードは、長い言葉の1文字ヒントを入れない形も遊びくらべられるようにする
-      if (id === 'crossword') {
-        const alt = doc.createElement('span');
-        alt.className = 'debug-game-tiers';
-        alt.appendChild(debugLink('上級（長い言葉の1文字ヒントなし）', '&games&play=crossword&tier=2&longHint=0', 'debug-tier'));
-        li.appendChild(alt);
-      }
       list.appendChild(li);
     });
     show('screen-debug-games');
