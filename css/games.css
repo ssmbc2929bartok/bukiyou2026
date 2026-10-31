@@ -1760,6 +1760,14 @@
 .hd-jar.black { background: #2d2d2d; }
 .hd-jar.green { background: #3cb44b; }
 
+/* なぞる線の説明：スタートの みどりの まる */
+.hd-start {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #06d6a0;
+}
+
 /* ヒントで光るびん（クリームづくりの説明） */
 .hd-glow {
   width: 30px;
