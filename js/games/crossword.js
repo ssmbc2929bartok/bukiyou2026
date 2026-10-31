@@ -149,7 +149,8 @@
       });
       // 最初から埋めておく字。
       //   1. 5文字以上の長い言葉で、ほかの言葉と交わるのが1つ以下のものは、数に関係なく1文字ずつ
-      //   2. give の言葉（取りちがえやすい・むずかしい言葉）に、1つの言葉に1文字ずつ（必ず入れる）
+      //   2. give の言葉（取りちがえやすい・むずかしい言葉）に、1つの言葉に1文字ずつ（必ず入れる）。
+      //      giveAt があれば、その場所の字を埋める（例 giveAt: [3] は3文字目）
       //   3. 2 で埋めた字が 中級1つ・上級2つ に足りないときは、ほかの言葉の字で足す（1 で埋めた字は数に入れない）
       // どれも、ほかの言葉と交わりの少ないマスを先に選ぶ（交わるマスを埋めると、2つの言葉のヒントになってしまう）。
       function giveCell(k) {
@@ -180,6 +181,13 @@
       }
       let givenCount = 0;
       ctx.shuffle(puzzle.words.filter(function (w) { return w.give; })).forEach(function (w) {
+        if (w.giveAt) {
+          w.giveAt.forEach(function (n) {
+            const k = w.keys[n - 1];
+            if (k && !cells[k].given) { giveCell(k); givenCount++; }
+          });
+          return;
+        }
         if (hasGiven(w)) return;
         giveCell(leastCrossed(w.keys));
         givenCount++;
