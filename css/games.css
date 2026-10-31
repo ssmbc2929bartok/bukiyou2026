@@ -1879,6 +1879,14 @@
   object-fit: contain;
 }
 
+/* ロボットの説明：くろい かべ（ゲームの .robot-cell.wall と同じ しましま） */
+.hd-wall {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: repeating-linear-gradient(45deg, #8d99ae 0 6px, #7a869a 6px 12px);
+}
+
 /* ロボットの説明：ゴールの たてものの下の「ゴール」 */
 .hd-goal {
   padding: 0 5px;

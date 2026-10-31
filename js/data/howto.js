@@ -412,6 +412,31 @@
         finger: [[70, 99, 0], [52, 92, 0.18], [52, 88, 0.22, 'tap'], [70, 99, 0.45]],
       },
       {
+        // くろい（しましまの）マスは かべ。ぶつかると止まって、さいしょに もどる（js/games/robot.js の move）
+        caption: 'くろい かべに ぶつかると、さいしょに もどるよ',
+        dur: 4000,
+        parts: [
+          { html: '', cls: 'hd-wall', x: 62, y: 28 },
+          { html: '<img src="assets/img/oit-tower.webp" alt="">', cls: 'hd-img', x: 84, y: 28 },
+          { html: 'ゴール', cls: 'hd-goal', x: 84, y: 52 },
+          { html: '<img src="assets/img/robot.png" alt="">', cls: 'hd-img', x: 18, y: 28, kf: [
+            { offset: 0, left: '18%', top: '28%', transform: 'translateX(0)' },
+            { offset: 0.2, left: '18%', top: '28%', transform: 'translateX(0)' },
+            { offset: 0.38, left: '42%', top: '28%', transform: 'translateX(0)' },
+            { offset: 0.42, left: '46%', top: '28%', transform: 'translateX(4px)' },
+            { offset: 0.46, left: '42%', top: '28%', transform: 'translateX(-4px)' },
+            { offset: 0.5, left: '44%', top: '28%', transform: 'translateX(3px)' },
+            { offset: 0.64, left: '44%', top: '28%', transform: 'translateX(0)' },
+            { offset: 0.72, left: '18%', top: '28%', transform: 'translateX(0)' },
+            { offset: 1, left: '18%', top: '28%', transform: 'translateX(0)' },
+          ] },
+          { html: 'ぶつかった！', cls: 'hd-pop bad', x: 50, y: 6, kf: appear(0.42, 0.66) },
+          { html: 'さいしょに もどるよ', cls: 'hd-pop', x: 30, y: 58, kf: appear(0.68, 0.95) },
+          { html: '→', cls: 'hd-block', x: 44, y: 82 },
+          { html: '→', cls: 'hd-block', x: 56, y: 82 },
+        ],
+      },
+      {
         // 「1つずつ」を押すたびに、やじるしが1つずつ光って、ロボットが1マスずつ進む
         caption: '「1つずつ」なら、1こずつ うごいて たしかめられるよ',
         dur: 4400,
