@@ -58,7 +58,7 @@
       howto: 'おぼえて、おなじ えを 2まい そろえよう！',
       enabled: true, minTier: 0, time: [40, 35, 30],
       metrics: {
-        misses: { axis: { careful: -2 }, base: [[2, 2], [3, 2.5], [5, 3]] },
+        misses: { axis: { careful: -2 }, base: [[2, 2], [5, 3], [8, 4]] },   // v2.3.0 で 6ペア・8ペアにしたので、中級・上級を上げた
       },
     },
     trace: {
