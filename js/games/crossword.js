@@ -11,9 +11,11 @@
   'use strict';
   const BKF = root.BKF;
 
+  // longHint : 5文字以上の長い言葉で、ほかの言葉と交わるのが1つ以下のものに、数に関係なく1文字埋めるか。
+  //            入れる・入れないを遊びくらべている（?debug&games&play=crossword&tier=2&longHint=0 で入れない）
   const OPT = {
-    1: { W: 4, H: 4, count: 3, requireStar: false, given: 1 },
-    2: { W: 6, H: 6, count: 4, requireStar: true, given: 2 },
+    1: { W: 4, H: 4, count: 3, requireStar: false, given: 1, longHint: true },
+    2: { W: 6, H: 6, count: 4, requireStar: true, given: 2, longHint: true },
   };
 
   function shuffle(a) {
@@ -145,20 +147,49 @@
           return k;
         });
       });
-      // 交わっていないマスを、最初から埋めておく
-      const single = Object.keys(cells).filter(function (k) { return cells[k].words.length === 1; });
-      ctx.shuffle(single).slice(0, opt.given).forEach(function (k) {
+      // 最初から埋めておく字。
+      //   1. 5文字以上の長い言葉で、ほかの言葉と交わるのが1つ以下のものは、数に関係なく1文字ずつ
+      //   2. give の言葉（取りちがえやすい・むずかしい言葉）に、1つの言葉に1文字ずつ（必ず入れる）
+      //   3. 2 で埋めた字が 中級1つ・上級2つ に足りないときは、ほかの言葉の字で足す（1 で埋めた字は数に入れない）
+      // どれも、ほかの言葉と交わりの少ないマスを先に選ぶ（交わるマスを埋めると、2つの言葉のヒントになってしまう）。
+      function giveCell(k) {
         cells[k].given = true;
         cells[k].value = cells[k].answer;
+      }
+      function leastCrossed(keys) {
+        const fewest = Math.min.apply(null, keys.map(function (k) { return cells[k].words.length; }));
+        return ctx.pick(keys.filter(function (k) { return cells[k].words.length === fewest; }));
+      }
+      function crossings(w) {
+        const others = {};
+        w.keys.forEach(function (k) {
+          cells[k].words.forEach(function (wi) { if (puzzle.words[wi] !== w) others[wi] = true; });
+        });
+        return Object.keys(others).length;
+      }
+      function hasGiven(w) { return w.keys.some(function (k) { return cells[k].given; }); }
+      let longHint = opt.longHint;
+      if (ctx.debug) {
+        const q = new URLSearchParams(root.location.search).get('longHint');
+        if (q !== null) longHint = q !== '0';
+      }
+      if (longHint) {
+        puzzle.words.forEach(function (w) {
+          if (w.chars.length >= 5 && crossings(w) <= 1 && !hasGiven(w)) giveCell(leastCrossed(w.keys));
+        });
+      }
+      let givenCount = 0;
+      ctx.shuffle(puzzle.words.filter(function (w) { return w.give; })).forEach(function (w) {
+        if (hasGiven(w)) return;
+        giveCell(leastCrossed(w.keys));
+        givenCount++;
       });
-      // give のある言葉（ほかの言葉と取りちがえやすいもの）は、少なくとも1文字を最初から埋めておく。
-      // 交わらないマスがあればそこを、なければ交わるマスを使う
-      puzzle.words.forEach(function (w) {
-        if (!w.give || w.keys.some(function (k) { return cells[k].given; })) return;
+      ctx.shuffle(puzzle.words.filter(function (w) { return !w.give; })).forEach(function (w) {
+        if (givenCount >= opt.given || w.keys.some(function (k) { return cells[k].given; })) return;
         const lone = w.keys.filter(function (k) { return cells[k].words.length === 1; });
-        const k = ctx.pick(lone.length ? lone : w.keys);
-        cells[k].given = true;
-        cells[k].value = cells[k].answer;
+        if (!lone.length) return;
+        giveCell(ctx.pick(lone));
+        givenCount++;
       });
       const open = Object.keys(cells).filter(function (k) { return !cells[k].given; });
 
