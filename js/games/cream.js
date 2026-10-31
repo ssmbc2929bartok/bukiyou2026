@@ -3,8 +3,9 @@
  * お手本の色のクリームと同じ色になるように、材料のびん（色だけ）から2つ選んで混ぜる。3問。
  *   初級：あか・あお・きいろ / 中級：＋しろ / 上級：＋くろ
  *   上級の3問は、1回でできる問題・2回まぜる問題・3回まぜる問題が1つずつ（順番はランダム）。
- *     2回：2色をまぜて、しろを足す（例：だいだい → うすい だいだい）
- *     3回：2色をまぜて、どちらかの色をもう1回足して、しろを足す（例：だいだい → あかだいだい → サーモンピンク）
+ *     2回・3回まぜる問題は、2色をまぜたクリームに、材料を1つずつ足していく形で、材料は毎回ランダムに選ぶ
+ *     （例：あか＋きいろ → ＋しろ、あお＋しろ → ＋きいろ → ＋あか）。
+ *     暗すぎる色・しろに近すぎる色・材料の色そのままに近い色は、選びなおす。
  *   上級は、まぜたクリームを「パレット」に残す（5つまで。いっぱいなら古いものから入れかわる。問題がかわると空にする）。
  *   パレットのクリームは、びんと同じようにタップして、もう一度まぜられる（パレットどうしでもよい）。
  *   first : 1回目の混ぜ方で当てた問題の割合（2回・3回まぜる問題は、その回数で当てたら）→ ひらめき（＋）
@@ -28,9 +29,9 @@
     KW: [158, 158, 158], KR: [123, 30, 43], BK: [31, 47, 92], KY: [107, 107, 30],
   };
   const MATERIALS = [['R', 'B', 'Y'], ['R', 'B', 'Y', 'W'], ['R', 'B', 'Y', 'W', 'K']];
-  // 何色がまざったか分かりにくい、にごった色は問題に出さない（くろ＋あか の こげちゃ）。
-  // くろ＋しろ（はいいろ）・くろ＋あお（あいいろ）・くろ＋きいろ（オリーブ）は出す
-  const MUDDY = ['KR'];
+  // 何色がまざったか分かりにくい、にごった色を問題に出さないときは、ここに書く（例 'KR' は くろ＋あか）。
+  // いまは どの組み合わせも出す（2026-11-01 に見て決めた）
+  const MUDDY = [];
   const PALETTE = 5;   // パレットに残せる数
 
   function key(a, b) { return [a, b].sort().join(''); }
@@ -83,11 +84,29 @@
         });
         return { recipe: recipe, color: color, steps: adds.length + 1 };
       }
+      // 2回・3回まぜる問題を、ランダムな材料で作る。見分けにくい色は選びなおす
+      function brightness(c) { return 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]; }
+      function far(c, list) {
+        return list.every(function (d) { return Math.hypot(c[0] - d[0], c[1] - d[1], c[2] - d[2]) > 60; });
+      }
+      function multi(steps, avoid) {
+        let q = null;
+        for (let tries = 0; tries < 200; tries++) {
+          const p = ctx.pick(pairs);
+          const adds = [];
+          for (let i = 1; i < steps; i++) adds.push(ctx.pick(mats));
+          q = build(p, adds);
+          const b = brightness(q.color);
+          const bases = mats.map(function (m) { return BASE[m]; });
+          if (b > 55 && b < 232 && far(q.color, bases) && far(q.color, avoid)) break;
+        }
+        return q;
+      }
       if (ctx.tier === 2) {
         const at = ctx.shuffle([0, 1, 2]);
-        const bases = ctx.shuffle([['R', 'Y'], ['B', 'Y'], ['R', 'B']]);
-        questions[at[0]] = build(bases[0], ['W']);
-        questions[at[1]] = build(bases[1], [ctx.pick(bases[1]), 'W']);
+        const others = questions.map(function (q) { return q.color; });
+        questions[at[0]] = multi(2, others);
+        questions[at[1]] = multi(3, others.concat([questions[at[0]].color]));
       }
 
       const qLabel = ctx.el('div', 'cream-q');
