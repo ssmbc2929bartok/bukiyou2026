@@ -64,7 +64,7 @@
     },
     trace: {
       title: 'せんを なぞろう', company: 'IFA住宅設計室', icon: '✏️',
-      howto: 'おてほんの せんを ゆびで なぞろう！',
+      howto: 'みどりの まるから、ゆびを はなさずに ひとふでで なぞろう！',
       enabled: true, minTier: 0, time: [30, 30, 30],
       metrics: {
         dev: { axis: { craft: -2 }, base: [[0.8, 0.4], [0.7, 0.35], [0.7, 0.35]] },

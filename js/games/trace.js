@@ -6,7 +6,9 @@
  *   中級（曲がりや角がある線）：波 / ジグザグ / やね / ドア（アーチ）
  *   上級（長い線・角の多い線）：ぐるぐる / 四角い波 / いえの形（ひと筆） / かいだん
  *   設計図らしい線（やね・ドア・いえ・かいだん）は、IFA住宅設計室にちなむ。
+ * なぞりかたは ひと筆：みどりの まる（スタート）からしか なぞりはじめられない。指をはなしたら、その線はおわり（次の線へ）。
  *   shapes : 出た線の種類（記録だけ。例 "roof,wave"）
+ *   misstart : スタートでない所から なぞろうとした回数（記録だけ）
  *   dev   : 指の位置と線のずれの平均（はみ出してもよい幅の半分を 1 とする）→ 手先（−）
  *   cover : お手本の線のうち、なぞれた割合 → ていねい（＋）
  */
@@ -14,6 +16,7 @@
   'use strict';
   const BKF = root.BKF;
   const BAND = [20, 16, 14];   // はみ出してもよい幅の半分（px）
+  const START_R = 30;          // スタートの まるとして受けつける半径（px）
 
   // 点の列を、だいたい step px ごとの細かい点にする
   function densify(points, step) {
@@ -165,6 +168,7 @@
       });
       let li = 0;
       let drawing = null;   // なぞっている指の点
+      let misstart = 0;
       const strokes = [];
       const dists = [];
 
@@ -244,10 +248,18 @@
       function coverage(line) { return line.count / line.pts.length; }
 
       ctx.on(ctx.stage, 'pointerdown', function (e) {
-        if (li >= lines.length) return;
+        if (li >= lines.length || drawing) return;
+        // スタート（みどりの まる）からしか なぞりはじめられない
+        const p = ctx.pos(e);
+        const s = lines[li].pts[0];
+        if (Math.hypot(p.x - s.x, p.y - s.y) > START_R) {
+          misstart++;
+          ctx.pop('みどりの まるから はじめてね', s.x, s.y - 34);
+          return;
+        }
         drawing = { line: li, pts: [] };
         strokes.push(drawing);
-        addPoint(ctx.pos(e));
+        addPoint(p);
         ctx.stage.setPointerCapture && ctx.stage.setPointerCapture(e.pointerId);
         draw();
       });
@@ -257,10 +269,11 @@
         draw();
         if (coverage(lines[li]) >= 0.97) next();
       });
+      // ひと筆：指をはなしたら、どこまで なぞれていても その線はおわり
       function up() {
         if (!drawing || li >= lines.length) return;
         drawing = null;
-        if (coverage(lines[li]) >= 0.9) next();
+        next();
       }
       ctx.on(ctx.stage, 'pointerup', up);
       ctx.on(ctx.stage, 'pointercancel', up);
@@ -268,14 +281,14 @@
       function next() {
         drawing = null;
         if (li === lines.length - 1) {
-          ctx.pop('できた！', W / 2, H / 2, 'good');
+          ctx.pop(coverage(lines[li]) >= 0.9 ? 'できた！' : 'おしまい！', W / 2, H / 2, 'good');
           ctx.after(400, function () { ctx.finish(metrics()); });
           li = lines.length;   // これ以上なぞらない
           return;
         }
+        ctx.pop(coverage(lines[li]) >= 0.9 ? 'できた！ つぎの せん！' : 'つぎの せん！', W / 2, H / 2, 'good');
         li++;
         msg.textContent = '2ほんめ';
-        ctx.pop('つぎの せん！', W / 2, H / 2, 'good');
         draw();
       }
 
@@ -286,6 +299,7 @@
           cover: covers.reduce(function (a, b) { return a + b; }, 0) / covers.length,
           lines: Math.min(li, lines.length),
           shapes: lines.map(function (l) { return l.id; }).join(','),
+          misstart: misstart,
         };
       }
 
