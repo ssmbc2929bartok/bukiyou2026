@@ -2,9 +2,11 @@
  * 温度キープ（朝日熱処理工業）
  * ハンドルを回すと温度が上がり、止めると下がる。緑のゾーンに保つ。
  *   回す速さ ω（1秒あたりの回転数）で落ち着く温度は 20 + 600ω ℃。
- *   目標に必要な速さは毎回ランダム：初級 0.8〜1.5 / 中級 0.5〜1.0 / 上級 1.0〜1.4 → 0.55〜0.8 → 0.3〜0.45
- *   （ゆっくり一定に回し続けるほうが難しいので、上級ほど遅くする）
- *   上級は20秒で、10秒目と15秒目に目標の温度が変わる（速い → ふつう → 遅い）。
+ *   目標に必要な速さは毎回ランダム（ゲーム全体で いちばん遅い 0.3 〜 いちばん速い 1.5）：
+ *     初級 1.2〜1.5（いちばん速い〜少し遅め） / 中級 0.6〜1.2（ちょい遅め〜ちょい速め） / 上級 0.3〜1.5（全部）
+ *   （ゆっくり一定に回し続けるほうが難しいので、初級は速めにする）
+ *   上級は20秒で、10秒目と15秒目に目標の温度が変わる。3つの速さは全部の範囲からランダムに選び、
+ *   かわったのが分かるように、前の速さと MIN_STEP 以上ちがう速さにする（速い・遅いの順番もランダム）。
  *   変わったあとの2秒は、合わせる時間として zone に数えない。
  *   zone : 3秒以降でゾーン内にいた時間の割合 → こつこつ（＋）
  *   over : ゾーンの上を行き過ぎた最大の幅（ゾーンの幅を 1 とする）→ ていねい（−）
@@ -12,26 +14,26 @@
 (function (root) {
   'use strict';
   const BKF = root.BKF;
-  const RANGE = [[0.8, 1.5], [0.5, 1.0]];   // 初級・中級（上級は STAGES）
+  const RANGE = [[1.2, 1.5], [0.6, 1.2], [0.3, 1.5]];   // 難易度ごとの、回す速さの範囲
   const ROOM = 20;
   const GAIN = 600;
   const HALF = 60;        // ゾーンの半分の幅（℃）
   const MAX_T = 1100;     // 温度計の上限
   const TAU = 0.8;        // 温度が追いつく速さ（秒）
   const WARMUP = 3;
-  // 上級：目標が変わる時刻（秒）と、それぞれの区間の速さ
-  const STAGES = [
-    { at: 0, range: [1.0, 1.4] },
-    { at: 10, range: [0.55, 0.8] },
-    { at: 15, range: [0.3, 0.45] },
-  ];
+  const CHANGES = [0, 10, 15];   // 上級：目標が変わる時刻（秒）
+  const MIN_STEP = 0.35;         // 上級：かわるときに、前の速さとこれ以上ちがう速さにする
   const GRACE = 2;        // 目標が変わったあと、数えない時間（秒）
 
   BKF.games.register('heat', {
     start: function (ctx) {
-      const plan = (ctx.tier === 2 ? STAGES : [{ at: 0, range: RANGE[ctx.tier] }]).map(function (st) {
-        const omega = ctx.rand(st.range[0], st.range[1]);
-        return { at: st.at, omega: omega, target: ROOM + GAIN * omega };
+      const r = RANGE[ctx.tier];
+      const plan = [];
+      (ctx.tier === 2 ? CHANGES : [0]).forEach(function (at) {
+        let omega = ctx.rand(r[0], r[1]);
+        const prev = plan.length ? plan[plan.length - 1].omega : null;
+        for (let tries = 0; prev !== null && Math.abs(omega - prev) < MIN_STEP && tries < 50; tries++) omega = ctx.rand(r[0], r[1]);
+        plan.push({ at: at, omega: omega, target: ROOM + GAIN * omega });
       });
       let stage = 0;
       let target = plan[0].target;
