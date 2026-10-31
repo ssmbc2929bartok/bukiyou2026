@@ -12,6 +12,7 @@
   const BKF = root.BKF;
   const doc = root.document;
   const DEBUG = new URLSearchParams(root.location.search).has('debug');
+  const TIMEUP_MS = 1300;   // 時間切れのとき「じかんぎれ！」を出しておく長さ
   const impls = {};
   const $ = function (id) { return doc.getElementById(id); };
 
@@ -182,16 +183,40 @@
           listeners.forEach(function (l) { l[0].removeEventListener(l[1], l[2], l[3]); });
           timeouts.forEach(clearTimeout);
           const ms = Math.round(performance.now() - playStart);
-          $('game-play').hidden = true;
-          $('game-done').hidden = false;
-          $('game-done-text').textContent = reason === 'skip' ? 'つぎに いこう！' : 'すごい！';
-          setTimeout(function () {
-            stage.innerHTML = '';
-            resolve({
-              id: id, tier: tier, metrics: m || {}, skipped: reason === 'skip', reason: reason,
-              ms: ms, firstTouchMs: firstTouchMs, taps: taps, rulesSkipped: rulesSkipped,
-            });
-          }, 1100);
+          // 時間切れのときは、どのゲームも
+          //   1. ゲームの上に「⏰ じかんぎれ！」を出す（TIMEUP_MS）
+          //   2. ゲームに reveal があれば、答えを見せる（クロスワード：3秒。記録する値は見せる前に取ってある）
+          //   3. 「がんばったね！」の画面にする
+          if (reason === 'timeup') {
+            const note = doc.createElement('div');
+            note.className = 'game-timeup';
+            note.innerHTML = '<span aria-hidden="true">⏰</span>じかんぎれ！';
+            stage.appendChild(note);
+            setTimeout(function () {
+              note.remove();
+              let revealMs = 0;
+              if (handle && handle.reveal) {
+                try { revealMs = handle.reveal() || 0; } catch (err) { console.error(err); }
+              }
+              setTimeout(showDone, revealMs);
+            }, TIMEUP_MS);
+          } else {
+            showDone();
+          }
+
+          function showDone() {
+            $('game-play').hidden = true;
+            $('game-done').hidden = false;
+            $('game-done-emoji').textContent = reason === 'timeup' ? '👏' : '🌟';
+            $('game-done-text').textContent = reason === 'skip' ? 'つぎに いこう！' : reason === 'timeup' ? 'がんばったね！' : 'すごい！';
+            setTimeout(function () {
+              stage.innerHTML = '';
+              resolve({
+                id: id, tier: tier, metrics: m || {}, skipped: reason === 'skip', reason: reason,
+                ms: ms, firstTouchMs: firstTouchMs, taps: taps, rulesSkipped: rulesSkipped,
+              });
+            }, 1100);
+          }
         }
 
         // のこり時間は数字で出す（バーより見やすいという声があった）。のこり5秒からは赤くする
