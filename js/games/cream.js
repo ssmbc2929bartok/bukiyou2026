@@ -8,6 +8,9 @@
  *     暗すぎる色・しろに近すぎる色・材料の色そのままに近い色は、選びなおす。
  *   上級は、まぜたクリームを「パレット」に残す（5つまで。いっぱいなら古いものから入れかわる。問題がかわると空にする）。
  *   パレットのクリームは、びんと同じようにタップして、もう一度まぜられる（パレットどうしでもよい）。
+ *   同じ問題で5回まちがえるたびに、ヒントを1つ出す（答えに使う色のびんを光らせて「ヒント：あかを つかうよ」）。
+ *   使う量の多い色から順に教える。2回・3回まぜる問題は、途中のまぜ（1回・2回）はまちがいに数えない。
+ *   hints : 出したヒントの数（記録だけ）
  *   first : 1回目の混ぜ方で当てた問題の割合（2回・3回まぜる問題は、その回数で当てたら）→ ひらめき（＋）
  *   tries : 1問あたりに混ぜた回数 → チャレンジ（＋）
  * クリームは材料の割合で表す（例：あか＋きいろ → {R:0.5, Y:0.5}）。割合が同じなら正解。
@@ -33,6 +36,8 @@
   // いまは どの組み合わせも出す（2026-11-01 に見て決めた）
   const MUDDY = [];
   const PALETTE = 5;   // パレットに残せる数
+  const HINT_EVERY = 5; // 何回まちがえるたびにヒントを出すか
+  const NAMES = { R: 'あか', B: 'あお', Y: 'きいろ', W: 'しろ', K: 'くろ' };
 
   function key(a, b) { return [a, b].sort().join(''); }
   function rgb(c) { return 'rgb(' + c.map(Math.round).join(',') + ')'; }
@@ -125,8 +130,10 @@
       let paletteNo = 0;
       let busy = false;
 
+      const jarEls = {};
       mats.forEach(function (code) {
         const b = ctx.el('button', 'jar', jars);
+        jarEls[code] = b;
         b.type = 'button';
         b.style.background = rgb(BASE[code]);
         ctx.on(b, 'click', function () { pick({ code: code, recipe: single(code), color: BASE[code], el: b }); });
@@ -173,6 +180,23 @@
         palette = [];
         renderPalette();
         triesNow = 0;
+        hintsNow = 0;
+        Object.keys(jarEls).forEach(function (c) { jarEls[c].classList.remove('hint'); });
+      }
+
+      // ヒント：答えに使う色を、量の多い順に1つずつ教える
+      let hintsNow = 0;
+      let totalHints = 0;
+      function giveHint(q) {
+        const codes = Object.keys(q.recipe).sort(function (a, b) { return q.recipe[b] - q.recipe[a]; });
+        if (hintsNow >= codes.length) {
+          ctx.pop('ヒント：ひかって いる いろで つくれるよ', ctx.width() / 2, 140);
+          return;
+        }
+        const code = codes[hintsNow++];
+        totalHints++;
+        jarEls[code].classList.add('hint');
+        ctx.pop('ヒント：' + NAMES[code] + 'を つかうよ', ctx.width() / 2, 140, 'good');
       }
 
       function clearSel() {
@@ -226,6 +250,9 @@
             ctx.pop('ちがう いろだね', ctx.width() / 2, 140, 'bad');
           }
           ctx.after(500, function () { setBowl(mixing, null); });
+          // 5回まちがえるたびにヒント（途中のまぜは数えない）
+          const fails = triesNow - (q.steps - 1);
+          if (fails > 0 && fails % HINT_EVERY === 0) ctx.after(900, function () { giveHint(q); });
           busy = false;
         });
       }
@@ -236,6 +263,7 @@
           first: solvedFirst / questions.length,
           tries: attempted ? totalTries / attempted : null,
           solved: qi,
+          hints: totalHints,
         };
       }
 
