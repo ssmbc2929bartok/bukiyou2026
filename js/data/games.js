@@ -84,7 +84,7 @@
     cream: {
       title: 'クリームづくり', company: '香椎化学工業', icon: '🧴',
       howto: 'おてほんと おなじ いろの クリームを つくろう！',
-      enabled: true, minTier: 0, time: [40, 35, 30],
+      enabled: true, minTier: 0, time: [45, 45, 45],   // 3問あって時間が足りないので、どの難易度も45秒
       metrics: {
         first: { axis: { idea: 2 }, base: [[0.4, 0.3], [0.35, 0.3], [0.3, 0.3]] },
         tries: { axis: { challenge: 1 }, base: [[2, 1], [2.5, 1.2], [3, 1.5]] },

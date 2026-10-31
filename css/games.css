@@ -721,6 +721,16 @@
   transform: translateY(-6px);
 }
 
+/* ヒントで教えた色のびん */
+.jar.hint {
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.55), 0 0 0 4px #ffd166, 0 0 14px 4px rgba(255, 209, 102, 0.9);
+  animation: jar-hint 1s ease-in-out infinite alternate;
+}
+
+@keyframes jar-hint {
+  to { box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.55), 0 0 0 4px #ffd166, 0 0 4px 1px rgba(255, 209, 102, 0.5); }
+}
+
 /* 上級（5本）は、パレットとぶつからないよう少し小さくして1段に並べる */
 .jars.five {
   gap: 8px;
@@ -1749,6 +1759,14 @@
 .hd-jar.white { background: #fff; box-shadow: inset 0 0 0 2px #cfd8e3, inset 0 5px 0 rgba(255, 255, 255, 0.5); }
 .hd-jar.black { background: #2d2d2d; }
 .hd-jar.green { background: #3cb44b; }
+
+/* ヒントで光るびん（クリームづくりの説明） */
+.hd-glow {
+  width: 30px;
+  height: 36px;
+  border-radius: 8px;
+  box-shadow: 0 0 0 3px #ffd166, 0 0 10px 3px rgba(255, 209, 102, 0.9);
+}
 
 .hd-thermo {
   width: 22px;

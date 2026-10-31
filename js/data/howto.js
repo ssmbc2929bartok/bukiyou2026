@@ -208,6 +208,20 @@
         finger: [[45, 99, 0], [32, 86, 0.2], [32, 80, 0.25, 'tap'], [50, 86, 0.42], [50, 80, 0.47, 'tap'], [70, 99, 0.7]],
       },
       {
+        // 5回まちがえるたびに、答えに使う色のびんが光る（js/games/cream.js の HINT_EVERY）
+        caption: '5かい まちがえると、つかう いろが ひかって ヒントが でるよ',
+        dur: 3600,
+        parts: [
+          { html: '<i style="background:#f9a03f"></i>おてほん', cls: 'hd-bowl', x: 30, y: 30 },
+          { html: '<i></i>まぜる', cls: 'hd-bowl', x: 70, y: 30 },
+          { html: '', cls: 'hd-jar', x: 32, y: 80 },
+          { html: '', cls: 'hd-jar yellow', x: 50, y: 80 },
+          { html: '', cls: 'hd-jar blue', x: 68, y: 80 },
+          { html: '', cls: 'hd-glow', x: 32, y: 80, kf: appear(0.3) },
+          { html: 'ヒント：あかを つかうよ', cls: 'hd-pop good', x: 50, y: 10, kf: appear(0.3, 0.95) },
+        ],
+      },
+      {
         // しょきゅうは 3つの いろ（js/games/cream.js の MATERIALS）
         caption: 'しょきゅうでは 3つの いろを つかうよ！',
         tiers: [0],
