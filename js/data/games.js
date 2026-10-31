@@ -8,6 +8,7 @@
  *   timeNote: 制限時間なしのとき、説明画面に出す終わり方
  *   tierNote: 難易度ごとに、遊び方に足すひとこと [初級, 中級, 上級]（ないときは null）
  *   needs   : 'tilt' … スマホの傾きが必要
+ *   endurance: true … 時間いっぱい がんばる耐久ゲーム。時間切れは「しゅうりょう！」→「すごい！」（ふつうは「じかんぎれ！」→「がんばったね！」）
  *   metrics : 軸に入れる値
  *     axis : { 軸id: 重み }。値が“ふつう”より大きいほど、重みの向きにその軸が強くなる
  *     base : 難易度ごとの“ふつう”の値 [平均, ばらつき(標準偏差)]。10月は手で決めた仮の値
@@ -93,6 +94,7 @@
     heat: {
       title: 'おんどキープ', company: '朝日熱処理工業', icon: '🔥',
       howto: 'ハンドルを まわして、みどりの ところに たもとう！',
+      endurance: true,
       tierNote: [null, null, 'とちゅうで おんどが 2かい かわるよ（10びょう・15びょう）'],
       enabled: true, minTier: 0, time: [15, 15, 20],
       metrics: {
@@ -148,6 +150,7 @@
     bounce: {
       title: 'ケースを まもれ', company: 'アクテック', icon: '🧰',
       howto: 'とんでくる どうぐを タップして はねかえそう！',
+      endurance: true,
       enabled: true, minTier: 0, time: [20, 20, 20],
       metrics: {
         survive: { axis: { steady: 2 }, base: [[12, 5], [10, 5], [8, 4]] },

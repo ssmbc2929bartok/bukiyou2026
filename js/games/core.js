@@ -187,13 +187,14 @@
           timeouts.forEach(clearTimeout);
           const ms = Math.round(performance.now() - playStart);
           // 時間切れのときは、どのゲームも
-          //   1. ゲームの上に「⏰ じかんぎれ！」を出す（TIMEUP_MS）
+          //   1. ゲームの上に「⏰ じかんぎれ！」を出す（TIMEUP_MS）。耐久ゲーム（endurance）は「🏁 しゅうりょう！」
           //   2. ゲームに reveal があれば、答えを見せる（クロスワード：3秒。記録する値は見せる前に取ってある）
-          //   3. 「がんばったね！」の画面にする
+          //   3. 「がんばったね！」の画面にする。耐久ゲームは、時間いっぱい がんばれたので「すごい！」
+          const finished = reason === 'timeup' && def.endurance;
           if (reason === 'timeup') {
             const note = doc.createElement('div');
-            note.className = 'game-timeup';
-            note.innerHTML = '<span aria-hidden="true">⏰</span>じかんぎれ！';
+            note.className = 'game-timeup' + (finished ? ' finished' : '');
+            note.innerHTML = finished ? '<span aria-hidden="true">🏁</span>しゅうりょう！' : '<span aria-hidden="true">⏰</span>じかんぎれ！';
             stage.appendChild(note);
             setTimeout(function () {
               note.remove();
@@ -210,8 +211,9 @@
           function showDone() {
             $('game-play').hidden = true;
             $('game-done').hidden = false;
-            $('game-done-emoji').textContent = reason === 'timeup' ? '👏' : '🌟';
-            $('game-done-text').textContent = reason === 'skip' ? 'つぎに いこう！' : reason === 'timeup' ? 'がんばったね！' : 'すごい！';
+            const tired = reason === 'timeup' && !finished;
+            $('game-done-emoji').textContent = tired ? '👏' : '🌟';
+            $('game-done-text').textContent = reason === 'skip' ? 'つぎに いこう！' : tired ? 'がんばったね！' : 'すごい！';
             setTimeout(function () {
               stage.innerHTML = '';
               resolve({
