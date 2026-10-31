@@ -1,14 +1,17 @@
 /*
  * 絵合わせ（枚方市）
  * 最初の5秒だけ全部表にして見せ、伏せてから始める（タイマーは伏せてから動く）。
- * 初級3ペア / 中級4ペア / 上級6ペア
+ * 初級 3×2（3ペア） / 中級 4×3（6ペア） / 上級 4×4（8ペア）。前は 3・4・6ペアだった（v2.3.0 で変更）。
+ * カードは正方形。並べられるいちばん大きい大きさにする。
  *   misses : そろわなかった回数 → ていねい（−）
  */
 (function (root) {
   'use strict';
   const BKF = root.BKF;
-  const PAIRS = [3, 4, 6];
+  const PAIRS = [3, 6, 8];
   const COLS = [3, 4, 4];
+  const ROWS = [2, 3, 4];
+  const GAP = 10;
   const PREVIEW_MS = 5000;
 
   BKF.games.register('memory', {
@@ -24,9 +27,15 @@
 
       const msg = ctx.el('div', 'game-msg', null, 'おぼえてね！ 5');
       const grid = ctx.el('div', 'memory-grid');
-      const rows = Math.ceil(cards.length / COLS[ctx.tier]);
-      grid.style.gridTemplateColumns = 'repeat(' + COLS[ctx.tier] + ', 1fr)';
-      grid.style.gridTemplateRows = 'repeat(' + rows + ', 1fr)';
+      // 正方形のカードを、上の「おぼえてね！」の下（44px）から下の余白（12px）までに収める
+      const cols = COLS[ctx.tier];
+      const rows = ROWS[ctx.tier];
+      const side = Math.floor(Math.min(
+        (ctx.width() - 24 - GAP * (cols - 1)) / cols,
+        (ctx.height() - 44 - 12 - GAP * (rows - 1)) / rows));
+      grid.style.gridTemplateColumns = 'repeat(' + cols + ', ' + side + 'px)';
+      grid.style.gridTemplateRows = 'repeat(' + rows + ', ' + side + 'px)';
+      grid.style.setProperty('--card', side + 'px');
 
       cards.forEach(function (card) {
         const b = ctx.el('button', 'memory-card open', grid);
