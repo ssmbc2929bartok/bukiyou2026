@@ -2,7 +2,11 @@
  * 塗り絵（ダイコロ）
  * 形の中にうすい線で区画がある。上のお手本と同じ配色を目指して自由に塗る。
  * 道具：ふつうのふで・ふとふで・ほそふで（6色、消しゴムなし）。「できた！」か時間切れで終わり。
- *   初級：丸いワッペン / 中級：星（細い先） / 上級：歯車（細い歯）
+ * 形は難易度ごとに3つあり、毎回ランダムに選ぶ（v2.3.0 で 1つずつ から増やした）。
+ *   初級（細い所なし・区画2つ）：丸いワッペン / ハート / いえ
+ *   中級（細い所あり・区画2〜3つ）：星（細い先） / 花（細いくき） / さかな（細いしっぽの付け根）
+ *   上級（細い所あり・区画3つ）：歯車（細い歯） / ちょうちょ（細い胴と触角） / 木（細いみき）
+ *   design  : どの形だったか（記録だけ）
  *   outside : 塗った所のうち、形の外の割合 → ていねい（−）
  *   thin    : 細い所を塗ったうち、ほそふでで塗った割合 → ひらめき（＋）（細い所がない初級は記録しない）
  *   match   : 区画ごとにいちばん多い色が、お手本の色と同じだった区画の割合 → センス（＋）
@@ -57,37 +61,167 @@
     return p;
   }
 
+  // 点を順につないだ形（閉じる）。重なった形が穴にならないよう、いつも同じ向き（画面で時計回り）にする
+  function poly(points) {
+    let area = 0;
+    points.forEach(function (q, i) {
+      const r = points[(i + 1) % points.length];
+      area += q[0] * r[1] - r[0] * q[1];
+    });
+    if (area < 0) points = points.slice().reverse();
+    const p = new Path2D();
+    points.forEach(function (q, i) { if (i === 0) p.moveTo(q[0], q[1]); else p.lineTo(q[0], q[1]); });
+    p.closePath();
+    return p;
+  }
+
+  function rect(x0, y0, x1, y1) {
+    return poly([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]);
+  }
+
+  // いくつかの形を1つにまとめる
+  function union(paths) {
+    const p = new Path2D();
+    paths.forEach(function (q) { p.addPath(q); });
+    return p;
+  }
+
+  function heart(cx, cy, s) {
+    const p = new Path2D();
+    p.moveTo(cx, cy + s * 0.9);
+    p.bezierCurveTo(cx - s * 1.35, cy + s * 0.05, cx - s * 0.9, cy - s * 1.0, cx, cy - s * 0.38);
+    p.bezierCurveTo(cx + s * 0.9, cy - s * 1.0, cx + s * 1.35, cy + s * 0.05, cx, cy + s * 0.9);
+    p.closePath();
+    return p;
+  }
+
+  function ellipse(x, y, rx, ry, rot) {
+    const p = new Path2D();
+    p.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2);
+    return p;
+  }
+
+  // 中心から角度 a の向きに、幅 w の細い棒（触角など）
+  function stick(x, y, a, len, w) {
+    const dx = Math.cos(a);
+    const dy = Math.sin(a);
+    return poly([
+      [x - dy * w, y + dx * w], [x + dy * w, y - dx * w],
+      [x + dx * len + dy * w, y + dy * len - dx * w], [x + dx * len - dy * w, y + dy * len + dx * w],
+    ]);
+  }
+
   /*
    * 形の定義
+   *   id      : 記録に残す名前
    *   shape   : 形全体
    *   regions : 区画（先に当てはまったものが、その点の区画）
-   *   thin    : 細い所かどうか（(x, y) → true/false）
+   *   lines   : 区画の境目に引く点線
+   *   thin    : 細い所かどうか（(x, y) → true/false）。細い所がない形は null
    */
-  function design(tier, cx, cy, R) {
-    if (tier === 0) {
-      return {
-        shape: circle(cx, cy, R),
-        regions: [circle(cx, cy, R * 0.5), circle(cx, cy, R)],
-        lines: [circle(cx, cy, R * 0.5)],
-        thin: null,
-      };
-    }
-    if (tier === 1) {
-      const s = star(cx, cy, R, R * 0.45);
-      return {
-        shape: s,
-        regions: [circle(cx, cy, R * 0.36), s],
-        lines: [circle(cx, cy, R * 0.36)],
-        thin: function (x, y) { return Math.hypot(x - cx, y - cy) > R * 0.66; },
-      };
-    }
-    const gshape = gear(cx, cy, R);
-    return {
-      shape: gshape,
-      regions: [circle(cx, cy, R * 0.25), circle(cx, cy, R * 0.62), gshape],
-      lines: [circle(cx, cy, R * 0.25), circle(cx, cy, R * 0.62)],
-      thin: function (x, y) { return Math.hypot(x - cx, y - cy) > R * 0.62; },
-    };
+  const DESIGNS = [
+    // 初級：細い所なし・区画2つ
+    [
+      function wappen(cx, cy, R) {
+        return {
+          id: 'wappen', shape: circle(cx, cy, R),
+          regions: [circle(cx, cy, R * 0.5), circle(cx, cy, R)],
+          lines: [circle(cx, cy, R * 0.5)], thin: null,
+        };
+      },
+      function heartShape(cx, cy, R) {
+        const outer = heart(cx, cy + R * 0.05, R);
+        const inner = heart(cx, cy + R * 0.05, R * 0.5);
+        return { id: 'heart', shape: outer, regions: [inner, outer], lines: [inner], thin: null };
+      },
+      function house(cx, cy, R) {
+        const roof = poly([[cx - R, cy - R * 0.05], [cx, cy - R * 0.95], [cx + R, cy - R * 0.05]]);
+        const wall = rect(cx - R * 0.72, cy - R * 0.05, cx + R * 0.72, cy + R * 0.9);
+        return { id: 'house', shape: union([roof, wall]), regions: [roof, wall], lines: [], thin: null };
+      },
+    ],
+    // 中級：細い所あり・区画2〜3つ
+    [
+      function starShape(cx, cy, R) {
+        const s = star(cx, cy, R, R * 0.45);
+        return {
+          id: 'star', shape: s, regions: [circle(cx, cy, R * 0.36), s],
+          lines: [circle(cx, cy, R * 0.36)],
+          thin: function (x, y) { return Math.hypot(x - cx, y - cy) > R * 0.66; },
+        };
+      },
+      function flower(cx, cy, R) {
+        const fy = cy - R * 0.22;
+        const petals = [];
+        for (let i = 0; i < 5; i++) {
+          const a = -Math.PI / 2 + i * Math.PI * 2 / 5;
+          petals.push(ellipse(cx + Math.cos(a) * R * 0.42, fy + Math.sin(a) * R * 0.42, R * 0.3, R * 0.22, a));
+        }
+        const center = circle(cx, fy, R * 0.24);
+        const stem = rect(cx - R * 0.05, fy + R * 0.5, cx + R * 0.05, cy + R);
+        return {
+          id: 'flower', shape: union(petals.concat([center, stem])),
+          regions: [center, stem, union(petals)], lines: [center],
+          thin: function (x, y) { return y > fy + R * 0.5 && Math.abs(x - cx) < R * 0.08; },
+        };
+      },
+      function fish(cx, cy, R) {
+        const body = ellipse(cx - R * 0.2, cy, R * 0.72, R * 0.46);
+        const tail = poly([[cx + R * 0.42, cy], [cx + R, cy - R * 0.48], [cx + R, cy + R * 0.48]]);
+        return {
+          id: 'fish', shape: union([body, tail]), regions: [tail, body], lines: [],
+          thin: function (x, y) { return x > cx + R * 0.5 && x < cx + R * 0.72; },
+        };
+      },
+    ],
+    // 上級：細い所あり・区画3つ
+    [
+      function gearShape(cx, cy, R) {
+        const g = gear(cx, cy, R);
+        return {
+          id: 'gear', shape: g,
+          regions: [circle(cx, cy, R * 0.25), circle(cx, cy, R * 0.62), g],
+          lines: [circle(cx, cy, R * 0.25), circle(cx, cy, R * 0.62)],
+          thin: function (x, y) { return Math.hypot(x - cx, y - cy) > R * 0.62; },
+        };
+      },
+      function butterfly(cx, cy, R) {
+        const upper = union([
+          ellipse(cx - R * 0.5, cy - R * 0.3, R * 0.46, R * 0.36, -0.45),
+          ellipse(cx + R * 0.5, cy - R * 0.3, R * 0.46, R * 0.36, 0.45),
+        ]);
+        const lower = union([
+          ellipse(cx - R * 0.38, cy + R * 0.4, R * 0.32, R * 0.28, 0.4),
+          ellipse(cx + R * 0.38, cy + R * 0.4, R * 0.32, R * 0.28, -0.4),
+        ]);
+        const body = union([
+          rect(cx - R * 0.06, cy - R * 0.55, cx + R * 0.06, cy + R * 0.75),
+          stick(cx, cy - R * 0.5, -Math.PI / 2 - 0.45, R * 0.45, R * 0.025),
+          stick(cx, cy - R * 0.5, -Math.PI / 2 + 0.45, R * 0.45, R * 0.025),
+        ]);
+        return {
+          id: 'butterfly', shape: union([upper, lower, body]), regions: [body, upper, lower], lines: [],
+          thin: function (x, y) { return Math.abs(x - cx) < R * 0.08 || y < cy - R * 0.62; },
+        };
+      },
+      function tree(cx, cy, R) {
+        const top = poly([[cx, cy - R], [cx - R * 0.45, cy - R * 0.38], [cx + R * 0.45, cy - R * 0.38]]);
+        const leaves = union([
+          top,
+          poly([[cx, cy - R * 0.62], [cx - R * 0.68, cy + R * 0.12], [cx + R * 0.68, cy + R * 0.12]]),
+          poly([[cx, cy - R * 0.22], [cx - R * 0.88, cy + R * 0.58], [cx + R * 0.88, cy + R * 0.58]]),
+        ]);
+        const trunk = rect(cx - R * 0.07, cy + R * 0.58, cx + R * 0.07, cy + R);
+        return {
+          id: 'tree', shape: union([leaves, trunk]), regions: [top, trunk, leaves], lines: [],
+          thin: function (x, y) { return y > cy + R * 0.58; },
+        };
+      },
+    ],
+  ];
+
+  function design(ctx, cx, cy, R) {
+    return ctx.pick(DESIGNS[ctx.tier])(cx, cy, R);
   }
 
   BKF.games.register('paint', {
@@ -124,7 +258,7 @@
       const cx = AW / 2;
       const cy = AH / 2;
       const R = S * 0.44;
-      const d = design(ctx.tier, cx, cy, R);
+      const d = design(ctx, cx, cy, R);
       const sampleColors = ctx.shuffle(COLORS.map(function (c, i) { return i; })).slice(0, d.regions.length);
 
       // 線（形の外側と区画の線）
@@ -302,6 +436,7 @@
           thin: d.thin && thinPainted >= 5 ? thinByThin / thinPainted : null,
           match: matched / d.regions.length,
           cover: insideAll ? insidePainted / insideAll : 0,
+          design: d.id,
         };
       }
 
