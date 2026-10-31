@@ -160,13 +160,34 @@
 
     trace: [
       {
-        caption: 'みどりの まるから、ゆびを はなさずに ひとふでで なぞる。はなしたら おわり',
+        caption: 'みどりの まるから、ゆびを はなさずに ひとふでで なぞる',
         dur: 3800,
         lines: [
           { d: 'M10 60 Q 30 15 50 55 T 90 50', color: '#b8c4d6', width: 9, dash: '3 5' },
           { d: 'M10 60 Q 30 15 50 55 T 90 50', color: '#1e88e5', width: 5, from: 0.15, to: 0.8 },
         ],
+        parts: [
+          { html: '', cls: 'hd-start', x: 10, y: 60 },
+          { html: '🏁', size: 18, x: 90, y: 44 },
+          { html: 'できた！', cls: 'hd-pop good', x: 50, y: 10, kf: appear(0.82, 0.98) },
+        ],
         finger: { follow: 1, from: 0.15, to: 0.8 },
+      },
+      {
+        // とちゅうで指をはなすと、その線はおわって次の線へ（js/games/trace.js の up）
+        caption: 'とちゅうで ゆびを はなすと、その せんは おわり',
+        dur: 3800,
+        lines: [
+          { d: 'M10 60 Q 30 15 50 55 T 90 50', color: '#b8c4d6', width: 9, dash: '3 5' },
+          { d: 'M10 60 Q 30 15 50 55', color: '#1e88e5', width: 5, from: 0.15, to: 0.5 },
+        ],
+        parts: [
+          { html: '', cls: 'hd-start', x: 10, y: 60 },
+          { html: '🏁', size: 18, x: 90, y: 44 },
+          { html: 'はなした！', cls: 'hd-pop bad', x: 24, y: 86, kf: appear(0.52, 0.7) },
+          { html: 'つぎの せん！', cls: 'hd-pop good', x: 50, y: 10, kf: appear(0.68, 0.98) },
+        ],
+        finger: { follow: 1, from: 0.15, to: 0.5 },
       },
     ],
 
