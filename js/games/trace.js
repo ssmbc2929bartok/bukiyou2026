@@ -1,7 +1,12 @@
 /*
  * なぞる線（IFA住宅設計室・設計図の線）
  * 方眼紙の上のお手本の線を2本、指でなぞる。
- *   初級：ゆるい波線 / 中級：波線＋ジグザグ / 上級：ぐるぐる＋角の多い線
+ * 線の種類は難易度ごとに4つあり、毎回2本をランダムに選ぶ（v2.3.0 で増やした）。大きさ・向き（左右反対）も少しずつ変える。
+ *   初級（ゆるい線）：ゆるい波 / やま / たに / ななめの波
+ *   中級（曲がりや角がある線）：波 / ジグザグ / やね / ドア（アーチ）
+ *   上級（長い線・角の多い線）：ぐるぐる / 四角い波 / いえの形（ひと筆） / かいだん
+ *   設計図らしい線（やね・ドア・いえ・かいだん）は、IFA住宅設計室にちなむ。
+ *   shapes : 出た線の種類（記録だけ。例 "roof,wave"）
  *   dev   : 指の位置と線のずれの平均（はみ出してもよい幅の半分を 1 とする）→ 手先（−）
  *   cover : お手本の線のうち、なぞれた割合 → ていねい（＋）
  */
@@ -40,12 +45,12 @@
     return pts;
   }
 
-  function spiral(W, H) {
+  function spiral(W, H, dir) {
     const pts = [];
     const r0 = Math.min(W, H) * 0.42;
     for (let i = 0; i <= 120; i++) {
       const t = i / 120;
-      const a = t * Math.PI * 4;
+      const a = t * Math.PI * 4 * (dir || 1);
       const r = r0 * (1 - 0.75 * t);
       pts.push({ x: W / 2 + Math.cos(a) * r, y: H / 2 + Math.sin(a) * r });
     }
@@ -64,10 +69,81 @@
     return pts;
   }
 
-  function linesFor(tier, W, H) {
-    if (tier === 0) return [wave(W, H, 1, 0.16, 0), wave(W, H, 1.5, 0.14, Math.PI)];
-    if (tier === 1) return [wave(W, H, 2, 0.2, 0), zigzag(W, H, 5, 0.18)];
-    return [spiral(W, H), steps(W, H, 6, 0.18)];
+  // t（0〜1）ごとの y の割合から、左から右への線を作る
+  function curve(W, H, fy) {
+    const pts = [];
+    for (let i = 0; i <= 60; i++) {
+      const t = i / 60;
+      pts.push({ x: W * (0.1 + 0.8 * t), y: H * fy(t) });
+    }
+    return pts;
+  }
+
+  // 割合で書いた点 [[x, y], ...] を画面の点にする
+  function at(W, H, list) {
+    return list.map(function (q) { return { x: W * q[0], y: H * q[1] }; });
+  }
+
+  // 線の種類。id は記録に残す名前
+  const POOLS = [
+    // 初級：ゆるい線
+    [
+      { id: 'wave', make: function (W, H, ctx) { return wave(W, H, ctx.rand(1, 1.5), ctx.rand(0.12, 0.16), ctx.rand(0, Math.PI * 2)); } },
+      { id: 'hill', make: function (W, H, ctx) { const h = ctx.rand(0.22, 0.3); return curve(W, H, function (t) { return 0.62 - Math.sin(Math.PI * t) * h; }); } },
+      { id: 'valley', make: function (W, H, ctx) { const h = ctx.rand(0.22, 0.3); return curve(W, H, function (t) { return 0.38 + Math.sin(Math.PI * t) * h; }); } },
+      { id: 'slope', make: function (W, H, ctx) { const a = ctx.rand(0.05, 0.08); return curve(W, H, function (t) { return 0.7 - 0.4 * t + Math.sin(Math.PI * 2 * t) * a; }); } },
+    ],
+    // 中級：曲がりや角がある線
+    [
+      { id: 'wave', make: function (W, H, ctx) { return wave(W, H, ctx.rand(2, 2.5), ctx.rand(0.17, 0.21), ctx.rand(0, Math.PI * 2)); } },
+      { id: 'zigzag', make: function (W, H, ctx) { return zigzag(W, H, ctx.randInt(4, 6), ctx.rand(0.15, 0.19)); } },
+      { id: 'roof', make: function (W, H, ctx) {
+        const top = ctx.rand(0.25, 0.32);
+        return at(W, H, [[0.1, 0.7], [0.28, 0.7], [0.5, top], [0.72, 0.7], [0.9, 0.7]]);
+      } },
+      { id: 'door', make: function (W, H) {
+        // ドアの形：下から上がって、上は半円、また下がる
+        const pts = at(W, H, [[0.28, 0.82], [0.28, 0.48]]);
+        const cx = W * 0.5;
+        const cy = H * 0.48;
+        const r = W * 0.22;
+        for (let i = 1; i < 30; i++) {
+          const a = Math.PI + Math.PI * i / 30;
+          pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+        }
+        return pts.concat(at(W, H, [[0.72, 0.48], [0.72, 0.82]]));
+      } },
+    ],
+    // 上級：長い線・角の多い線
+    [
+      { id: 'spiral', make: function (W, H, ctx) { return spiral(W, H, ctx.pick([1, -1])); } },
+      { id: 'steps', make: function (W, H, ctx) { return steps(W, H, ctx.randInt(5, 7), ctx.rand(0.15, 0.19)); } },
+      { id: 'house', make: function (W, H) {
+        // いえの形をひと筆で：左下 → 左の壁 → やね → 右の壁 → 床（出発の点と重ならないよう、少し手前で終わる）
+        return at(W, H, [[0.2, 0.85], [0.2, 0.45], [0.5, 0.15], [0.8, 0.45], [0.8, 0.85], [0.3, 0.85]]);
+      } },
+      { id: 'stairs', make: function (W, H, ctx) {
+        // かいだん：左下から右上へ
+        const n = ctx.randInt(4, 5);
+        const pts = [{ x: W * 0.1, y: H * 0.85 }];
+        for (let i = 0; i < n; i++) {
+          const x = W * (0.1 + 0.8 * (i + 1) / n);
+          const y = H * (0.85 - 0.7 * (i + 1) / n);
+          pts.push({ x: x, y: pts[pts.length - 1].y });
+          pts.push({ x: x, y: y });
+        }
+        return pts;
+      } },
+    ],
+  ];
+
+  // 2本をランダムに選ぶ。半分くらいは左右を反対にする（右から左へ なぞる）
+  function linesFor(ctx, W, H) {
+    return ctx.shuffle(POOLS[ctx.tier]).slice(0, 2).map(function (kind) {
+      let pts = kind.make(W, H, ctx);
+      if (Math.random() < 0.5) pts = pts.map(function (q) { return { x: W - q.x, y: q.y }; });
+      return { id: kind.id, pts: pts };
+    });
   }
 
   BKF.games.register('trace', {
@@ -83,9 +159,9 @@
       g.scale(dpr, dpr);
       const msg = ctx.el('div', 'game-msg', null, '1ほんめ');
 
-      const lines = linesFor(ctx.tier, W, H).map(function (pts) {
-        const dense = densify(pts, 4);
-        return { pts: dense, covered: dense.map(function () { return false; }), count: 0 };
+      const lines = linesFor(ctx, W, H).map(function (l) {
+        const dense = densify(l.pts, 4);
+        return { id: l.id, pts: dense, covered: dense.map(function () { return false; }), count: 0 };
       });
       let li = 0;
       let drawing = null;   // なぞっている指の点
@@ -209,6 +285,7 @@
           dev: dists.length ? dists.reduce(function (a, b) { return a + b; }, 0) / dists.length : null,
           cover: covers.reduce(function (a, b) { return a + b; }, 0) / covers.length,
           lines: Math.min(li, lines.length),
+          shapes: lines.map(function (l) { return l.id; }).join(','),
         };
       }
 
