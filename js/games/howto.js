@@ -7,7 +7,8 @@
  *
  *   card = { caption, dur, parts: [...], lines: [...], finger: [...] }
  *   part   : { html, x, y, size, cls, kf }   kf は Web Animations のキーフレーム（offset 0〜1）
- *   line   : { d, color, width, dash, from, to }   SVG の線。from〜to のあいだに描いていく（from がなければ最初から見える）
+ *   line   : { d, color, width, dash, from, to, hide }   SVG の線。from〜to のあいだに描いていく（from がなければ最初から見える）。
+ *            hide があれば、その offset で消える（かいろで、ぶつかった線が消える場面）
  *            d は M・L・Q・C・T と数字の組だけで書く（横の座標を2倍して、横2:縦1 の場面に合わせるため）
  *   finger : [[x, y, offset, 'tap' | 'down' | 'up'], ...] または { follow: 線の番号, from, to }（線をなぞる）
  */
@@ -116,6 +117,14 @@
           { offset: ln.from, strokeDashoffset: len },
           { offset: ln.to, strokeDashoffset: 0 },
           { offset: 1, strokeDashoffset: 0 },
+        ] });
+      }
+      if (ln.hide !== undefined) {
+        anims.push({ el: p, kf: [
+          { offset: 0, opacity: 1 },
+          { offset: ln.hide, opacity: 1 },
+          { offset: Math.min(1, ln.hide + 0.04), opacity: 0 },
+          { offset: 1, opacity: 0 },
         ] });
       }
     });

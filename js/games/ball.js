@@ -29,8 +29,8 @@
       '</div>';
   }
 
+  // 説明画面は、ほかのゲームと同じカード（js/data/howto.js の ball）。tiltDemo はゲーム中の小さな動きだけに使う
   BKF.games.register('ball', {
-    demo: function (box) { tiltDemo(box, false); },
     start: function (ctx) {
       const W = ctx.width();
       const H = ctx.height();

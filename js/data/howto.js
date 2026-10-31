@@ -1,7 +1,6 @@
 /*
  * ミニゲームの動く遊び方（js/games/howto.js で動かす）
  * 場面の座標は 横0〜100・縦0〜100（場面は 横2:縦1）。offset は 1回分の長さ（dur ミリ秒）を 0〜1 で表す。
- * ボール転がしは、スマホを傾ける説明（js/games/ball.js の demo）を使うので、ここにはない。
  */
 (function (root) {
   'use strict';
@@ -332,7 +331,7 @@
 
     circuit: [
       {
-        caption: 'おなじ いろの てんを ゆびで なぞって つなぐ。せんは まじわれないよ',
+        caption: 'おなじ いろの てんを ゆびで なぞって つなぐ',
         dur: 4400,
         lines: [
           { d: 'M18 28 L82 28', color: '#ef476f', width: 7, from: 0.1, to: 0.38 },
@@ -346,6 +345,25 @@
           { html: 'つながった！', cls: 'hd-pop good', x: 50, y: 92, kf: appear(0.88) },
         ],
         finger: [[30, 95, 0], [18, 28, 0.1, 'down'], [82, 28, 0.38, 'up'], [18, 72, 0.55, 'down'], [50, 72, 0.67], [50, 50, 0.73], [82, 50, 0.85, 'up'], [90, 95, 1]],
+      },
+      {
+        // せんどうしは まじわれない。ぶつかると、その線は消える（js/games/circuit.js）→ まわりみちを すれば つながる
+        caption: 'せんどうしは まじわれないよ。ぶつかると その せんは きえちゃう',
+        dur: 5600,
+        lines: [
+          { d: 'M18 50 L82 50', color: '#ef476f', width: 7 },
+          { d: 'M30 82 L30 50', color: '#1e88e5', width: 7, from: 0.08, to: 0.28, hide: 0.36 },
+          { d: 'M30 82 L92 82 L92 18 L70 18', color: '#1e88e5', width: 7, from: 0.55, to: 0.86 },
+        ],
+        parts: [
+          { html: '', cls: 'hd-dot', x: 18, y: 50 },
+          { html: '', cls: 'hd-dot', x: 82, y: 50 },
+          { html: '', cls: 'hd-dot blue', x: 30, y: 82 },
+          { html: '', cls: 'hd-dot blue', x: 70, y: 18 },
+          { html: 'ぶつかった！ きえちゃった', cls: 'hd-pop bad', x: 50, y: 30, kf: appear(0.3, 0.5) },
+          { html: 'まわりみち すれば つながる！', cls: 'hd-pop good', x: 50, y: 30, kf: appear(0.86, 0.98) },
+        ],
+        finger: [[40, 99, 0], [30, 82, 0.08, 'down'], [30, 52, 0.28, 'up'], [40, 96, 0.42], [30, 82, 0.55, 'down'], [92, 82, 0.66], [92, 18, 0.78], [70, 18, 0.86, 'up'], [80, 99, 0.98]],
       },
     ],
 
@@ -365,6 +383,106 @@
           { html: 'われた！', cls: 'hd-pop good', x: 50, y: 8, kf: appear(0.64, 0.95) },
         ],
         finger: [[62, 70, 0.05, 'tap'], [58, 66, 0.15, 'tap'], [62, 70, 0.25, 'tap'], [58, 66, 0.35, 'tap'], [62, 70, 0.45, 'tap'], [58, 66, 0.55, 'tap'], [72, 96, 0.8]],
+      },
+    ],
+
+    // ボール転がし：ゲーム中の「たての まま かたむけてね」の小さな動きは js/games/ball.js の tiltDemo
+    ball: [
+      {
+        caption: 'ボールを ゴールまで はこぼう',
+        dur: 3800,
+        lines: [
+          { d: 'M5 32 L62 32', color: '#8d99ae', width: 4 },
+          { d: 'M74 32 L95 32', color: '#8d99ae', width: 4 },
+          { d: 'M68 32 L68 72', color: '#bde0fe', width: 10 },
+          { d: 'M5 72 L95 72', color: '#8d99ae', width: 4 },
+        ],
+        parts: [
+          { html: '🏁', size: 18, x: 90, y: 62 },
+          { html: '', cls: 'hd-ball', x: 20, y: 27, kf: move([[20, 27, 0], [20, 27, 0.1], [68, 27, 0.36], [68, 67, 0.48], [88, 67, 0.72], [88, 67, 1]]) },
+          { html: 'ゴール！', cls: 'hd-pop good', x: 60, y: 10, kf: appear(0.72, 0.96) },
+        ],
+      },
+      {
+        caption: 'スマホを たての まま かたむけると、ボールが ころがるよ',
+        dur: 4000,
+        parts: [
+          { html: '<i></i>', cls: 'hd-phone', x: 24, y: 50, kf: [
+            { offset: 0, transform: 'rotate(0deg)' }, { offset: 0.1, transform: 'rotate(0deg)' },
+            { offset: 0.25, transform: 'rotate(-18deg)' }, { offset: 0.45, transform: 'rotate(-18deg)' },
+            { offset: 0.55, transform: 'rotate(0deg)' }, { offset: 0.65, transform: 'rotate(18deg)' },
+            { offset: 0.88, transform: 'rotate(18deg)' }, { offset: 1, transform: 'rotate(0deg)' },
+          ] },
+          { html: '', cls: 'hd-bar', x: 70, y: 66 },
+          { html: '', cls: 'hd-ball', x: 70, y: 59, kf: move([[70, 59, 0], [70, 59, 0.2], [52, 59, 0.45], [52, 59, 0.6], [88, 59, 0.88], [88, 59, 0.94], [70, 59, 1]]) },
+          { html: '← ひだり', cls: 'hd-pop', x: 52, y: 84, kf: appear(0.2, 0.5) },
+          { html: 'みぎ →', cls: 'hd-pop', x: 86, y: 84, kf: appear(0.62, 0.92) },
+        ],
+      },
+      {
+        caption: 'ただしい あなに おとすと したの だんへ。ちがう あなは いきどまり',
+        dur: 5200,
+        lines: [
+          { d: 'M5 30 L25 30', color: '#8d99ae', width: 4 },
+          { d: 'M35 30 L65 30', color: '#8d99ae', width: 4 },
+          { d: 'M75 30 L95 30', color: '#8d99ae', width: 4 },
+          { d: 'M30 30 L30 46', color: '#d4a373', width: 10 },
+          { d: 'M70 30 L70 72', color: '#bde0fe', width: 10 },
+          { d: 'M5 72 L95 72', color: '#8d99ae', width: 4 },
+        ],
+        parts: [
+          { html: '', cls: 'hd-ball', x: 50, y: 25, kf: move([[50, 25, 0], [50, 25, 0.06], [30, 25, 0.2], [30, 41, 0.27], [30, 41, 0.42], [50, 25, 0.48], [50, 25, 0.52], [70, 25, 0.64], [70, 67, 0.76], [70, 67, 1]]) },
+          { html: 'いきどまり！', cls: 'hd-pop bad', x: 30, y: 60, kf: appear(0.27, 0.46) },
+          { html: 'いいね！', cls: 'hd-pop good', x: 70, y: 10, kf: appear(0.76, 0.98) },
+        ],
+      },
+      {
+        // カバーで かくれた所は、したの でぐちの位置から どちらの あなか よそうする（js/games/ball.js の HIDDEN）
+        caption: 'カバーの したは みえないよ。したの でぐちを みて よそうしよう',
+        tiers: [0],
+        dur: 3600,
+        lines: [
+          { d: 'M5 30 L95 30', color: '#8d99ae', width: 4 },
+          { d: 'M70 64 L70 74', color: '#bde0fe', width: 10 },
+          { d: 'M5 74 L95 74', color: '#8d99ae', width: 4 },
+        ],
+        parts: [
+          { html: '？', cls: 'hd-cover', x: 50, y: 48 },
+          { html: 'しょきゅうは カバーが 1かしょ', cls: 'hd-pop', x: 50, y: 10, kf: appear(0) },
+          { html: 'でぐちは ここ！', cls: 'hd-pop good', x: 70, y: 90, kf: appear(0.3, 0.95) },
+        ],
+      },
+      {
+        // カバーで かくれた所は、したの でぐちの位置から どちらの あなか よそうする（js/games/ball.js の HIDDEN）
+        caption: 'カバーの したは みえないよ。したの でぐちを みて よそうしよう',
+        tiers: [1],
+        dur: 3600,
+        lines: [
+          { d: 'M5 30 L95 30', color: '#8d99ae', width: 4 },
+          { d: 'M70 64 L70 74', color: '#bde0fe', width: 10 },
+          { d: 'M5 74 L95 74', color: '#8d99ae', width: 4 },
+        ],
+        parts: [
+          { html: '？', cls: 'hd-cover', x: 50, y: 48 },
+          { html: 'ちゅうきゅうは カバーが 2かしょ', cls: 'hd-pop', x: 50, y: 10, kf: appear(0) },
+          { html: 'でぐちは ここ！', cls: 'hd-pop good', x: 70, y: 90, kf: appear(0.3, 0.95) },
+        ],
+      },
+      {
+        // カバーで かくれた所は、したの でぐちの位置から どちらの あなか よそうする（js/games/ball.js の HIDDEN）
+        caption: 'カバーの したは みえないよ。したの でぐちを みて よそうしよう',
+        tiers: [2],
+        dur: 3600,
+        lines: [
+          { d: 'M5 30 L95 30', color: '#8d99ae', width: 4 },
+          { d: 'M70 64 L70 74', color: '#bde0fe', width: 10 },
+          { d: 'M5 74 L95 74', color: '#8d99ae', width: 4 },
+        ],
+        parts: [
+          { html: '？', cls: 'hd-cover', x: 50, y: 48 },
+          { html: 'じょうきゅうは カバーが 3かしょ', cls: 'hd-pop', x: 50, y: 10, kf: appear(0) },
+          { html: 'でぐちは ここ！', cls: 'hd-pop good', x: 70, y: 90, kf: appear(0.3, 0.95) },
+        ],
       },
     ],
 
