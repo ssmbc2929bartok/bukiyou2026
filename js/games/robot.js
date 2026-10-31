@@ -2,6 +2,8 @@
  * ブロック命令（大阪工業大学）
  * 矢印ブロック（画面の上下左右）を並べて、ロボットをゴール（大阪工業大学 枚方キャンパスの建物）まで動かす。
  * 「ぜんぶ じっこう」と「1つずつ じっこう」がある。壁や外にぶつかったら止まって最初に戻る。
+ * 「1つずつ」で並べたやじるしを使いきってもゴールでないときは、その場で止まる（やじるしを足して続けられる）。
+ * 上級で わくが いっぱいのときだけ、最初に戻る。もう動いたやじるしを「けす」で消したときも、最初に戻る。
  *   初級：4×4・まっすぐ / 中級：5×5・曲がる / 上級：6×6・並べられる数に上限があり「×2」「×3」が必要
  *   道は毎回自動で作る（先にゴールまでの道を作り、そのまわりに壁を置く）。
  *   retries : やり直した回数 → かんがえる（−）
@@ -188,7 +190,12 @@
       }
       button('けす', 'sub erase', function () {
         blocks.pop();
-        if (stepIndex > blocks.length) stepIndex = blocks.length;
+        // もう動いたやじるしを消したら、ロボットの位置と合わなくなるので最初に戻す
+        if (stepIndex > blocks.length) {
+          ctx.pop('さいしょから うごかそう', W / 2, H - 120);
+          reset();
+          return;
+        }
         renderProgram();
       });
       button('1つずつ', '', function () { run(true); }, rowRun);
@@ -268,16 +275,33 @@
         if (!blocks.length) { ctx.pop('やじるしを ならべてね', W / 2, H - 120); return; }
         if (firstRun === null) firstRun = ctx.elapsed();
         if (stepMode) {
+          if (stepIndex >= blocks.length) {
+            // 使いきったあとに押したとき：足せるなら足してもらう。わくが いっぱいなら最初に戻す
+            if (blocks.length < maxBlocks) { ctx.pop('やじるしを たして つづけよう', W / 2, H - 120); return; }
+            stepRuns++;
+            ctx.pop('ゴールに とどかなかった', W / 2, H - 120, 'bad');
+            reset();
+            return;
+          }
           stepRuns++;
-          if (stepIndex >= blocks.length) { reset(); return; }
           const from = stepIndex;
           stepIndex++;
           renderProgram();
           play(from, from + 1, function (ok) {
             if (solved) return;
-            if (!ok || stepIndex >= blocks.length) {
-              ctx.pop(ok ? 'ゴールに とどかなかった' : 'ぶつかった！', W / 2, H - 120, 'bad');
+            if (!ok) {
+              ctx.pop('ぶつかった！', W / 2, H - 120, 'bad');
               reset();
+              return;
+            }
+            if (stepIndex >= blocks.length) {
+              // その場で止まる。やじるしを足して「1つずつ」で続けられる（上級で いっぱいなら最初に戻す）
+              if (blocks.length < maxBlocks) {
+                ctx.pop('やじるしを たして つづけよう', W / 2, H - 120);
+              } else {
+                ctx.pop('ゴールに とどかなかった', W / 2, H - 120, 'bad');
+                reset();
+              }
             }
           });
         } else {
