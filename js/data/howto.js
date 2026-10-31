@@ -207,6 +207,66 @@
         ],
         finger: [[45, 99, 0], [32, 86, 0.2], [32, 80, 0.25, 'tap'], [50, 86, 0.42], [50, 80, 0.47, 'tap'], [70, 99, 0.7]],
       },
+      {
+        // しょきゅうは 3つの いろ（js/games/cream.js の MATERIALS）
+        caption: 'しょきゅうでは 3つの いろを つかうよ！',
+        tiers: [0],
+        dur: 3200,
+        parts: [
+          { html: '', cls: 'hd-jar', x: 32, y: 56, kf: bump(0.15) },
+          { html: '', cls: 'hd-jar yellow', x: 50, y: 56, kf: bump(0.27) },
+          { html: '', cls: 'hd-jar blue', x: 68, y: 56, kf: bump(0.39) },
+        ],
+      },
+      {
+        // ちゅうきゅうは 4つの いろ（js/games/cream.js の MATERIALS）
+        caption: 'ちゅうきゅうでは 4つの いろを つかうよ！',
+        tiers: [1],
+        dur: 3200,
+        parts: [
+          { html: '', cls: 'hd-jar', x: 26, y: 56, kf: bump(0.15) },
+          { html: '', cls: 'hd-jar yellow', x: 42, y: 56, kf: bump(0.27) },
+          { html: '', cls: 'hd-jar blue', x: 58, y: 56, kf: bump(0.39) },
+          { html: '', cls: 'hd-jar white', x: 74, y: 56, kf: bump(0.51) },
+        ],
+      },
+      {
+        // じょうきゅうは 5つの いろ（js/games/cream.js の MATERIALS）
+        caption: 'じょうきゅうでは 5つの いろを つかうよ！',
+        tiers: [2],
+        dur: 3200,
+        parts: [
+          { html: '', cls: 'hd-jar', x: 22, y: 56, kf: bump(0.15) },
+          { html: '', cls: 'hd-jar yellow', x: 36, y: 56, kf: bump(0.27) },
+          { html: '', cls: 'hd-jar blue', x: 50, y: 56, kf: bump(0.39) },
+          { html: '', cls: 'hd-jar white', x: 64, y: 56, kf: bump(0.51) },
+          { html: '', cls: 'hd-jar black', x: 78, y: 56, kf: bump(0.63) },
+        ],
+      },
+      {
+        // 上級は、まぜた クリームを もういちど ほかの いろと まぜる問題が出る（きいろ＋あお → みどり、みどり＋しろ → うすい みどり）
+        caption: 'じょうきゅうでは 2かい いじょう まぜる クリームも でて くるよ',
+        tiers: [2],
+        dur: 5200,
+        parts: [
+          { html: '<i style="background:#9edba5"></i>おてほん', cls: 'hd-bowl', x: 28, y: 26 },
+          { html: '<i></i>まぜる', cls: 'hd-bowl', x: 72, y: 26 },
+          { html: '<i style="background:#3cb44b"></i>まぜる', cls: 'hd-bowl', x: 72, y: 26, kf: appear(0.3, 0.66) },
+          { html: '<i style="background:#9edba5"></i>まぜる', cls: 'hd-bowl', x: 72, y: 26, kf: appear(0.66) },
+          { html: '', cls: 'hd-jar yellow', x: 26, y: 80 },
+          { html: '', cls: 'hd-jar blue', x: 42, y: 80 },
+          { html: '', cls: 'hd-jar white', x: 58, y: 80 },
+          { html: '', cls: 'hd-jar green', x: 78, y: 80, kf: appear(0.34) },
+          { html: '', cls: 'hd-ring', x: 26, y: 80, kf: appear(0.1, 0.3) },
+          { html: '', cls: 'hd-ring', x: 42, y: 80, kf: appear(0.22, 0.3) },
+          { html: '', cls: 'hd-ring', x: 78, y: 80, kf: appear(0.48, 0.66) },
+          { html: '', cls: 'hd-ring', x: 58, y: 80, kf: appear(0.6, 0.66) },
+          { html: '1かいめ', cls: 'hd-pop', x: 50, y: 6, kf: appear(0.3, 0.45) },
+          { html: '2かいめ', cls: 'hd-pop good', x: 50, y: 6, kf: appear(0.7, 0.95) },
+        ],
+        finger: [[50, 99, 0], [26, 86, 0.06], [26, 80, 0.1, 'tap'], [42, 86, 0.18], [42, 80, 0.22, 'tap'],
+          [78, 86, 0.44], [78, 80, 0.48, 'tap'], [58, 86, 0.56], [58, 80, 0.6, 'tap'], [60, 99, 0.75]],
+      },
     ],
 
     heat: [
