@@ -1,9 +1,13 @@
 /*
  * クリーム作り（香椎化学工業）
  * お手本の色のクリームと同じ色になるように、材料のびん（色だけ）から2つ選んで混ぜる。3問。
- *   初級：あか・あお・きいろ / 中級：＋しろ / 上級：＋くろ、1問は2回混ぜる
- *   （上級は、混ぜたクリーム（ボウル）ともう1つの材料をもう一度混ぜられる）
- *   first : 1回目の混ぜ方で当てた問題の割合（2回混ぜる問題は2回で当てたら）→ ひらめき（＋）
+ *   初級：あか・あお・きいろ / 中級：＋しろ / 上級：＋くろ
+ *   上級の3問は、1回でできる問題・2回まぜる問題・3回まぜる問題が1つずつ（順番はランダム）。
+ *     2回：2色をまぜて、しろを足す（例：だいだい → うすい だいだい）
+ *     3回：2色をまぜて、どちらかの色をもう1回足して、しろを足す（例：だいだい → あかだいだい → サーモンピンク）
+ *   上級は、まぜたクリームを「パレット」に残す（5つまで。いっぱいなら古いものから入れかわる。問題がかわると空にする）。
+ *   パレットのクリームは、びんと同じようにタップして、もう一度まぜられる（パレットどうしでもよい）。
+ *   first : 1回目の混ぜ方で当てた問題の割合（2回・3回まぜる問題は、その回数で当てたら）→ ひらめき（＋）
  *   tries : 1問あたりに混ぜた回数 → チャレンジ（＋）
  * クリームは材料の割合で表す（例：あか＋きいろ → {R:0.5, Y:0.5}）。割合が同じなら正解。
  */
@@ -24,6 +28,10 @@
     KW: [158, 158, 158], KR: [123, 30, 43], BK: [31, 47, 92], KY: [107, 107, 30],
   };
   const MATERIALS = [['R', 'B', 'Y'], ['R', 'B', 'Y', 'W'], ['R', 'B', 'Y', 'W', 'K']];
+  // 何色がまざったか分かりにくい、にごった色は問題に出さない（くろ＋あか の こげちゃ）。
+  // くろ＋しろ（はいいろ）・くろ＋あお（あいいろ）・くろ＋きいろ（オリーブ）は出す
+  const MUDDY = ['KR'];
+  const PALETTE = 5;   // パレットに残せる数
 
   function key(a, b) { return [a, b].sort().join(''); }
   function rgb(c) { return 'rgb(' + c.map(Math.round).join(',') + ')'; }
@@ -56,22 +64,30 @@
       const mats = MATERIALS[ctx.tier];
       const pairs = [];
       for (let i = 0; i < mats.length; i++) {
-        for (let j = i + 1; j < mats.length; j++) pairs.push([mats[i], mats[j]]);
+        for (let j = i + 1; j < mats.length; j++) {
+          if (MUDDY.indexOf(key(mats[i], mats[j])) === -1) pairs.push([mats[i], mats[j]]);
+        }
       }
-      // 問題を3つ。上級は1問を「2回混ぜる」問題にする
+      // 問題を3つ。上級は、2問を「2回まぜる」「3回まぜる」問題にする
       const questions = ctx.shuffle(pairs).slice(0, 3).map(function (p) {
         const recipe = mixRecipe(single(p[0]), single(p[1]));
         return { recipe: recipe, color: PAIR[key(p[0], p[1])], steps: 1 };
       });
+      // 2色をまぜたクリームに、材料を順に足していく（見た目の色は、まぜた色どうしの平均）
+      function build(p, adds) {
+        let recipe = mixRecipe(single(p[0]), single(p[1]));
+        let color = PAIR[key(p[0], p[1])];
+        adds.forEach(function (code) {
+          recipe = mixRecipe(recipe, single(code));
+          color = color.map(function (v, j) { return (v + BASE[code][j]) / 2; });
+        });
+        return { recipe: recipe, color: color, steps: adds.length + 1 };
+      }
       if (ctx.tier === 2) {
-        const p = ctx.pick([['R', 'Y'], ['B', 'Y'], ['R', 'B']]);
-        const first = mixRecipe(single(p[0]), single(p[1]));
-        const c1 = PAIR[key(p[0], p[1])];
-        questions[ctx.randInt(0, 2)] = {
-          recipe: mixRecipe(first, single('W')),
-          color: c1.map(function (v, i) { return (v + BASE.W[i]) / 2; }),
-          steps: 2,
-        };
+        const at = ctx.shuffle([0, 1, 2]);
+        const bases = ctx.shuffle([['R', 'Y'], ['B', 'Y'], ['R', 'B']]);
+        questions[at[0]] = build(bases[0], ['W']);
+        questions[at[1]] = build(bases[1], [ctx.pick(bases[1]), 'W']);
       }
 
       const qLabel = ctx.el('div', 'cream-q');
@@ -79,14 +95,15 @@
       row.style.top = '36px';
       const target = ctx.el('div', 'bowl target', row, '<div class="bowl-dish"><div class="bowl-cream"></div></div>おてほん');
       const mixing = ctx.el('div', 'bowl', row, '<div class="bowl-dish"><div class="bowl-cream"></div></div>まぜる ボウル');
-      const jars = ctx.el('div', 'jars');
+      const jars = ctx.el('div', 'jars' + (mats.length > 4 ? ' five' : ''));
 
       let qi = 0;
       let solvedFirst = 0;
       let totalTries = 0;
       let triesNow = 0;
       let selected = [];
-      let bowl = null;        // { recipe, color }（上級で、もう一度混ぜるため）
+      let palette = [];       // 上級：まぜたクリーム { id, recipe, color, el }（古い順）
+      let paletteNo = 0;
       let busy = false;
 
       mats.forEach(function (code) {
@@ -95,15 +112,34 @@
         b.style.background = rgb(BASE[code]);
         ctx.on(b, 'click', function () { pick({ code: code, recipe: single(code), color: BASE[code], el: b }); });
       });
-      let bowlJar = null;
+      // 上級：まぜたクリームを並べるパレット（ボウルの段とびんの段のあいだ）
+      let paletteEl = null;
       if (ctx.tier === 2) {
-        bowlJar = ctx.el('button', 'jar bowl-jar', jars);
-        bowlJar.type = 'button';
-        bowlJar.title = 'まぜた クリーム';
-        bowlJar.style.visibility = 'hidden';
-        ctx.on(bowlJar, 'click', function () {
-          if (bowl) pick({ code: 'bowl', recipe: bowl.recipe, color: bowl.color, el: bowlJar });
-        });
+        paletteEl = ctx.el('div', 'cream-palette');
+        paletteEl.style.top = '150px';
+        ctx.el('div', 'cream-palette-label', paletteEl, 'パレット（まぜた クリーム）');
+        ctx.el('div', 'cream-palette-dishes', paletteEl);
+      }
+
+      function renderPalette() {
+        if (!paletteEl) return;
+        const dishes = paletteEl.querySelector('.cream-palette-dishes');
+        dishes.innerHTML = '';
+        for (let i = 0; i < PALETTE; i++) {
+          const item = palette[i];
+          const d = ctx.el('button', 'palette-dish' + (item ? '' : ' empty'), dishes);
+          d.type = 'button';
+          if (!item) continue;
+          d.style.background = rgb(item.color);
+          item.el = d;
+          ctx.on(d, 'click', function () { pick({ code: item.id, recipe: item.recipe, color: item.color, el: d }); });
+        }
+      }
+
+      function keep(recipe, color) {
+        palette.push({ id: 'p' + (paletteNo++), recipe: recipe, color: color });
+        if (palette.length > PALETTE) palette.shift();
+        renderPalette();
       }
 
       function setBowl(el, color) {
@@ -112,11 +148,11 @@
 
       function showQuestion() {
         const q = questions[qi];
-        qLabel.textContent = (qi + 1) + ' / 3もんめ' + (q.steps === 2 ? '（2かい いじょう まぜるよ）' : '');
+        qLabel.textContent = (qi + 1) + ' / 3もんめ' + (q.steps >= 2 ? '（2かい いじょう まぜるよ）' : '');
         setBowl(target, q.color);
         setBowl(mixing, null);
-        bowl = null;
-        if (bowlJar) bowlJar.style.visibility = 'hidden';
+        palette = [];
+        renderPalette();
         triesNow = 0;
       }
 
@@ -143,13 +179,9 @@
         const a = selected[0];
         const b = selected[1];
         const recipe = mixRecipe(a.recipe, b.recipe);
-        let color;
-        if (a.code === 'bowl' || b.code === 'bowl') {
-          const other = a.code === 'bowl' ? b : a;
-          color = bowl.color.map(function (v, i) { return (v + other.color[i]) / 2; });
-        } else {
-          color = colorOf(recipe);
-        }
+        // びん2つなら決めておいた色、パレットのクリームを使ったら色どうしの平均
+        const raw = a.code.length === 1 && b.code.length === 1;
+        const color = raw ? colorOf(recipe) : a.color.map(function (v, i) { return (v + b.color[i]) / 2; });
         triesNow++;
         totalTries++;
         setBowl(mixing, color);
@@ -167,19 +199,14 @@
             ctx.after(600, function () { showQuestion(); busy = false; });
             return;
           }
-          // 上級：2回混ぜる問題の1回目はボウルに残して、もう一度混ぜられるようにする
-          const half = q.steps === 2 && Object.keys(recipe).length === 2 && !(a.code === 'bowl' || b.code === 'bowl');
-          if (half) {
-            bowl = { recipe: recipe, color: color };
-            bowlJar.style.visibility = 'visible';
-            bowlJar.style.background = rgb(color);
-            ctx.pop('もう ひとつ まぜてみよう', ctx.width() / 2, 140);
+          if (paletteEl) {
+            // 上級：まぜたクリームはパレットに残して、もう一度まぜられるようにする
+            keep(recipe, color);
+            ctx.pop(q.steps >= 2 ? 'パレットに のこしたよ。もっと まぜてみよう' : 'パレットに のこしたよ', ctx.width() / 2, 140);
           } else {
             ctx.pop('ちがう いろだね', ctx.width() / 2, 140, 'bad');
-            bowl = null;
-            if (bowlJar) bowlJar.style.visibility = 'hidden';
-            ctx.after(500, function () { setBowl(mixing, null); });
           }
+          ctx.after(500, function () { setBowl(mixing, null); });
           busy = false;
         });
       }
