@@ -19,9 +19,11 @@
     start: function (ctx) {
       const W = ctx.width();
       const H = ctx.height();
+      // period は端から端までの秒数。中級は「もう少し速くてよい」という声があり、
+      // 上級のいちばん速いレンチ（1.05秒）の7割くらいの速さ（1.5秒）にした（前は 1.8秒）
       const lanes = ctx.tier === 2
         ? [{ count: 3, period: 1.3, amp: 1 }, { count: 2, period: 1.05, amp: 0.7 }]
-        : [{ count: ctx.tier === 0 ? 3 : 4, period: ctx.tier === 0 ? 2.5 : 1.8, amp: 1 }];
+        : [{ count: ctx.tier === 0 ? 3 : 4, period: ctx.tier === 0 ? 2.5 : 1.5, amp: 1 }];
       const tol = ctx.tier === 0 ? 0.26 : 0.2;
       const offsets = [];
       let early = 0;
