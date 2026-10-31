@@ -49,7 +49,7 @@
     //   stone いしわり / ball ボールころがし / robot ロボットを うごかそう /
     //   jump みんなで ジャンプ / bounce ケースを まもれ
     //   例：disabledGames: ['ball', 'jump'],
-    disabledGames: [],
+    disabledGames: [jump, robot],
 
     // 1回の送信を待つ時間（ミリ秒）。これを過ぎたら失敗として扱う。
     sendTimeoutMs: 8000,
