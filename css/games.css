@@ -1689,6 +1689,9 @@
 
 .hd-jar.yellow { background: #ffd166; }
 .hd-jar.blue { background: #4361ee; }
+.hd-jar.white { background: #fff; box-shadow: inset 0 0 0 2px #cfd8e3, inset 0 5px 0 rgba(255, 255, 255, 0.5); }
+.hd-jar.black { background: #2d2d2d; }
+.hd-jar.green { background: #3cb44b; }
 
 .hd-thermo {
   width: 22px;

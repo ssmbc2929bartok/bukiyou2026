@@ -89,9 +89,12 @@
     const demo = $('game-demo');
     demo.innerHTML = '';
     let howto = null;
-    const cards = BKF.howtoCards && BKF.howtoCards[id];
+    // カードに tiers があれば、その難易度のときだけ出す（例：クリームづくりの色の数）
+    const cards = BKF.howtoCards && BKF.howtoCards[id] && BKF.howtoCards[id].filter(function (c) {
+      return !c.tiers || c.tiers.indexOf(tier) !== -1;
+    });
     if (impl.demo) impl.demo(demo);
-    else if (cards && BKF.howto) howto = BKF.howto.render(demo, cards);
+    else if (cards && cards.length && BKF.howto) howto = BKF.howto.render(demo, cards);
     else demo.innerHTML = '<div class="game-hand">👆</div>';
     $('game-intro').classList.toggle('has-howto', Boolean(howto));
 

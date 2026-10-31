@@ -112,7 +112,7 @@
 
       function showQuestion() {
         const q = questions[qi];
-        qLabel.textContent = (qi + 1) + ' / 3もんめ' + (q.steps === 2 ? '（2かい まぜるよ）' : '');
+        qLabel.textContent = (qi + 1) + ' / 3もんめ' + (q.steps === 2 ? '（2かい いじょう まぜるよ）' : '');
         setBowl(target, q.color);
         setBowl(mixing, null);
         bowl = null;
