@@ -151,6 +151,15 @@
         cells[k].given = true;
         cells[k].value = cells[k].answer;
       });
+      // give のある言葉（ほかの言葉と取りちがえやすいもの）は、少なくとも1文字を最初から埋めておく。
+      // 交わらないマスがあればそこを、なければ交わるマスを使う
+      puzzle.words.forEach(function (w) {
+        if (!w.give || w.keys.some(function (k) { return cells[k].given; })) return;
+        const lone = w.keys.filter(function (k) { return cells[k].words.length === 1; });
+        const k = ctx.pick(lone.length ? lone : w.keys);
+        cells[k].given = true;
+        cells[k].value = cells[k].answer;
+      });
       const open = Object.keys(cells).filter(function (k) { return !cells[k].given; });
 
       const gridEl = ctx.el('div', 'cw-grid');
