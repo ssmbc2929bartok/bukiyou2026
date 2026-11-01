@@ -9,7 +9,8 @@
  *   上級は、まぜたクリームを「パレット」に残す（5つまで。いっぱいなら古いものから入れかわる。問題がかわると空にする）。
  *   パレットのクリームは、びんと同じようにタップして、もう一度まぜられる（パレットどうしでもよい）。
  *   同じ問題で5回まちがえるたびに、ヒントを1つ出す（答えに使う色のびんを光らせて「ヒント：あかを つかうよ」）。
- *   使う量の多い色から順に教える。2回・3回まぜる問題は、途中のまぜ（1回・2回）はまちがいに数えない。
+ *   その問題で まだ まぜて いない色を先に教え、その中では使う量の多い色から教える（v2.5.1）。
+ *   2回・3回まぜる問題は、途中のまぜ（1回・2回）はまちがいに数えない。
  *   hints : 出したヒントの数（記録だけ）
  *   first : 1回目の混ぜ方で当てた問題の割合（2回・3回まぜる問題は、その回数で当てたら）→ ひらめき（＋）
  *   tries : 1問あたりに混ぜた回数 → チャレンジ（＋）
@@ -180,20 +181,28 @@
         palette = [];
         renderPalette();
         triesNow = 0;
-        hintsNow = 0;
+        hinted = {};
+        usedNow = {};
         Object.keys(jarEls).forEach(function (c) { jarEls[c].classList.remove('hint'); });
       }
 
-      // ヒント：答えに使う色を、量の多い順に1つずつ教える
-      let hintsNow = 0;
+      // ヒント：答えに使う色を1つずつ教える。
+      // この問題で まだ まぜて いない色を先に（気づいて いない色を教えるため）、その中では量の多い順
+      let hinted = {};   // この問題で もう教えた色
+      let usedNow = {};  // この問題で まぜた色（パレットのクリームは、中に入っている材料の色）
       let totalHints = 0;
       function giveHint(q) {
-        const codes = Object.keys(q.recipe).sort(function (a, b) { return q.recipe[b] - q.recipe[a]; });
-        if (hintsNow >= codes.length) {
+        const codes = Object.keys(q.recipe)
+          .filter(function (c) { return !hinted[c]; })
+          .sort(function (a, b) {
+            return ((usedNow[a] ? 1 : 0) - (usedNow[b] ? 1 : 0)) || (q.recipe[b] - q.recipe[a]);
+          });
+        if (!codes.length) {
           ctx.pop('ヒント：ひかって いる いろで つくれるよ', ctx.width() / 2, 140);
           return;
         }
-        const code = codes[hintsNow++];
+        const code = codes[0];
+        hinted[code] = true;
         totalHints++;
         jarEls[code].classList.add('hint');
         ctx.pop('ヒント：' + NAMES[code] + 'を つかうよ', ctx.width() / 2, 140, 'good');
@@ -225,6 +234,7 @@
         // びん2つなら決めておいた色、パレットのクリームを使ったら色どうしの平均
         const raw = a.code.length === 1 && b.code.length === 1;
         const color = raw ? colorOf(recipe) : a.color.map(function (v, i) { return (v + b.color[i]) / 2; });
+        Object.keys(recipe).forEach(function (c) { usedNow[c] = true; });
         triesNow++;
         totalTries++;
         setBowl(mixing, color);
