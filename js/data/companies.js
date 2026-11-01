@@ -2,7 +2,7 @@
  * 企業データ（結果表示 S-004 と「気になる企業」で使う）
  * 結果に出すのは、不器用ファクトリーのトレーディングカードのページ
  * （https://bukiyo-factory.osaka/trading-card）に載っている企業のうち、
- * 枚方信用金庫・大阪工業大学・KUZUHA MALL・枚方市を除いた18社。
+ * 大阪工業大学・KUZUHA MALL・枚方市を除いた19社（枚方信用金庫は v2.5.0 で足した）。
  * この回に出す企業は js/config.js の companyIds で選べる。
  *
  *   short  : 画面に出す短い名前
@@ -104,6 +104,14 @@
       adult: '昭和25年創業の業務用拡声音響装置メーカー',
       url: 'https://www.noborudenki.co.jp/',
       vector: { leader: 2, social: 2, curious: 1, craft: 1, active: 1 },
+    },
+    {
+      // トレーディングカードのページに会社概要がないので、説明は信用金庫の仕事から書いた
+      id: 'hirashin', name: '枚方信用金庫', short: '枚方信用金庫', icon: '🏦', color: '#14746f',
+      desc: 'まちの みんなの お{金|かね}を あずかったり、まちの お{店|みせ}や こうじょうを おうえんしたり して いるよ。',
+      adult: '枚方を中心とした地域の信用金庫。預金や融資で、地元の暮らしと事業を支える',
+      url: 'https://www.hirakata-shinkin.co.jp/',
+      vector: { social: 3, steady: 3, careful: 3 },
     },
     {
       id: 'factory', name: '株式会社ファクトリー', short: 'ファクトリー', icon: '🛋️', color: '#c9a227',
