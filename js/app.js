@@ -91,6 +91,55 @@
     $(id).hidden = true;
   }
 
+  // ---------------------------------------------------------------- はじめる まえの説明
+
+  // 3つの項目を上から順に出す（しつもんの数・ミニゲームの場所・ルールの説明）。
+  // 数と場所は js/config.js の questionIds と gameConditions から作る
+  function renderGuide() {
+    const count = questions.length;
+    const after = BKF.config.gameConditions[state.condition].after.filter(function (n) { return n <= count; });
+    // しつもんの つぶを並べ、ミニゲームのあとに 🎮 を入れる
+    function track(withGames) {
+      let html = '<span class="guide-track" aria-hidden="true">';
+      for (let i = 1; i <= count; i++) {
+        html += '<i style="--i:' + i + '"></i>';
+        if (withGames && after.indexOf(i) !== -1) html += '<b>🎮</b>';
+      }
+      return html + '</span>';
+    }
+    const items = [{
+      icon: '📝',
+      text: 'しつもんは ' + count + 'こ あるよ',
+      art: track(false),
+    }];
+    if (after.length) {
+      items.push({
+        icon: '🎮',
+        text: after.map(function (n) { return n + 'もんめ'; }).join('と ') + 'の あとには ミニゲームが あるよ！',
+        sub: 'ミニゲームは とばす ことも できるよ',
+        art: track(true) + '<span class="guide-skip" aria-hidden="true">とばす</span>',
+      });
+      items.push({
+        icon: '📖',
+        text: 'ミニゲームの まえには ルールの せつめいが あるよ',
+        art: '<span class="guide-rule" aria-hidden="true"><span class="guide-rule-card">🔧 → 🔩</span>' +
+          '<span class="guide-rule-dots"><i></i><i></i><i></i></span></span>',
+      });
+    }
+    const list = $('guide-list');
+    list.innerHTML = items.map(function (it, i) {
+      return '<li class="guide-item" style="--n:' + i + '">' +
+        '<span class="guide-num" aria-hidden="true">' + (i + 1) + '</span>' +
+        '<div class="guide-body">' +
+        '<p class="guide-text"><span class="guide-icon" aria-hidden="true">' + it.icon + '</span>' + U.rubyHtml(it.text) + '</p>' +
+        (it.sub ? '<p class="guide-sub">' + U.rubyHtml(it.sub) + '</p>' : '') +
+        '<div class="guide-art">' + it.art + '</div>' +
+        '</div></li>';
+    }).join('');
+    $('guide-ok').style.setProperty('--n', items.length);
+    show('screen-guide');
+  }
+
   // ---------------------------------------------------------------- S-002 質問画面
 
   // 今のステップの見出しと選択肢
@@ -234,7 +283,8 @@
     $('q-progress-bar').style.width = Math.round((state.stepIndex / steps.length) * 100) + '%';
 
     const back = $('q-back');
-    const canGoBack = state.returnToConfirm || state.stepIndex > 0;
+    // どの画面でも もどれる（年れいの画面では、はじめる まえの説明に もどる）
+    const canGoBack = true;
     back.setAttribute('aria-disabled', canGoBack ? 'false' : 'true');
     back.tabIndex = canGoBack ? 0 : -1;
 
@@ -311,7 +361,10 @@
       renderConfirm();
       return;
     }
-    if (state.stepIndex === 0) return;
+    if (state.stepIndex === 0) {
+      renderGuide();
+      return;
+    }
     state.stepIndex--;
     while (state.stepIndex > 0 && steps[state.stepIndex].kind === 'game') state.stepIndex--;
     renderStep('back');
@@ -555,7 +608,7 @@
 
   function start() {
     resetState();
-    renderStep('next');
+    renderGuide();
   }
 
   function goTop() {
@@ -566,6 +619,7 @@
   $('top-note').innerHTML = 'しつもんと ミニゲームに こたえてね<br>（やく 3〜5ふん）';
   doc.querySelectorAll('[data-version]').forEach(function (el) { el.textContent = 'v' + BKF.config.appVersion; });
   $('start-button').addEventListener('click', start);
+  $('guide-ok').addEventListener('click', function () { renderStep('next'); });
   $('q-submit').addEventListener('click', submitStep);
   $('q-back').addEventListener('click', function () {
     if ($('q-back').getAttribute('aria-disabled') !== 'true') goBack();

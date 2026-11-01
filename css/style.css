@@ -1609,3 +1609,210 @@ h1[tabindex="-1"]:focus {
     line-height: 1.15;
   }
 }
+
+/* ==========================================================================
+   はじめる まえの説明（v2.5.3）
+   3つの項目が上から順に ふわっと出て、それぞれの絵が動く。
+   項目の順番は --n（0〜2）、しつもんの つぶの順番は --i（1〜10）。
+   ========================================================================== */
+
+#screen-guide .header {
+  margin: 6px 0 14px;
+}
+
+.guide-list {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.guide-item {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 12px 12px 12px 10px;
+  border-radius: 20px;
+  background: var(--choice-2);
+  animation: guide-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  animation-delay: calc(var(--n) * 0.7s + 0.2s);
+}
+
+.guide-item:nth-child(2) { background: var(--choice-3); }
+.guide-item:nth-child(3) { background: var(--choice-4); }
+
+@keyframes guide-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+.guide-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--mark-2);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.guide-item:nth-child(2) .guide-num { background: var(--mark-3); }
+.guide-item:nth-child(3) .guide-num { background: var(--mark-4); }
+
+.guide-text {
+  margin: 4px 0 0;
+  color: #26384a;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.guide-icon {
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.guide-sub {
+  margin: 2px 0 0;
+  color: #2f6b3e;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.guide-art {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* しつもんの つぶ：左から順に ともる */
+.guide-track {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.guide-track i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px #cfe3f5;
+  animation: guide-dot 0.3s ease both;
+  animation-delay: calc(var(--n) * 0.7s + 0.5s + var(--i) * 0.08s);
+}
+
+@keyframes guide-dot {
+  from { background: #fff; transform: scale(0.6); }
+  60% { transform: scale(1.3); }
+  to { background: #ffad26; box-shadow: none; transform: none; }
+}
+
+/* ミニゲームの しるし：つぶが ともったあと、ぴょこぴょこ はねる */
+.guide-track b {
+  font-size: 16px;
+  line-height: 1;
+  animation: guide-hop 1.4s ease-in-out infinite;
+  animation-delay: calc(var(--n) * 0.7s + 1.5s);
+}
+
+@keyframes guide-hop {
+  0%, 60%, 100% { transform: none; }
+  20% { transform: translateY(-6px) rotate(-8deg); }
+  40% { transform: translateY(0) rotate(6deg); }
+}
+
+/* 「とばす」ボタン（ゲーム中の右上のボタンに にせる） */
+.guide-skip {
+  padding: 2px 10px;
+  border: 2px solid #cfe3f5;
+  border-radius: 999px;
+  background: #fff;
+  color: #5b7590;
+  font-size: 12px;
+  font-weight: 800;
+  animation: guide-wiggle 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--n) * 0.7s + 1.8s);
+}
+
+@keyframes guide-wiggle {
+  0%, 70%, 100% { transform: none; }
+  78% { transform: rotate(-6deg) scale(1.08); }
+  86% { transform: rotate(6deg) scale(1.08); }
+}
+
+/* ルールの説明：カードが めくれて、点が 1→2→3 と すすむ */
+.guide-rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guide-rule-card {
+  padding: 3px 10px;
+  border: 2px solid #d9cdf3;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  animation: guide-flip 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--n) * 0.7s + 0.8s);
+}
+
+@keyframes guide-flip {
+  0%, 25%, 100% { transform: none; }
+  33% { transform: rotateY(90deg); }
+  41% { transform: none; }
+}
+
+.guide-rule-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.guide-rule-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d9cdf3;
+  animation: guide-page 2.4s steps(1) infinite;
+  animation-delay: calc(var(--n) * 0.7s + 0.8s);
+}
+
+.guide-rule-dots i:nth-child(2) { animation-name: guide-page-2; }
+.guide-rule-dots i:nth-child(3) { animation-name: guide-page-3; }
+
+@keyframes guide-page { 0% { background: var(--mark-4); } 33% { background: #d9cdf3; } }
+@keyframes guide-page-2 { 0% { background: #d9cdf3; } 33% { background: var(--mark-4); } 66% { background: #d9cdf3; } }
+@keyframes guide-page-3 { 0% { background: #d9cdf3; } 66% { background: var(--mark-4); } }
+
+/* 「わかった！」は、3つ目が出たあとに出す（押すのは いつでも できる） */
+#guide-ok {
+  animation: guide-fade 0.5s ease both;
+  animation-delay: calc(var(--n, 3) * 0.7s + 0.2s);
+}
+
+/* 押したときに沈む動き（.submit:active の transform）を じゃましないよう、不透明度だけ */
+@keyframes guide-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-height: 760px) {
+  #screen-guide .star {
+    display: none;
+  }
+  .guide-item {
+    padding: 9px 10px 9px 8px;
+  }
+  .guide-text {
+    font-size: 16px;
+  }
+}

@@ -76,6 +76,19 @@
       </div>
     </section>
 
+    <!-- はじめる まえの説明（v2.5.3）：しつもんの数・ミニゲームの場所・ルールの説明。中身は js/app.js の renderGuide -->
+    <section id="screen-guide" class="screen" data-bg="sky" hidden aria-labelledby="guide-title">
+      <div class="survey guide">
+        <header class="header">
+          <div class="star" aria-hidden="true">🗺️</div>
+          <h1 id="guide-title">はじめる まえに</h1>
+          <p>こんな ふうに すすむよ</p>
+        </header>
+        <ol class="guide-list" id="guide-list"></ol>
+        <button type="button" class="submit" id="guide-ok">わかった！</button>
+      </div>
+    </section>
+
     <!-- S-002 質問画面（hero-survey-all-files のデザイン） -->
     <section id="screen-question" class="screen" data-bg="sky" hidden aria-labelledby="q-text">
       <div class="survey">
