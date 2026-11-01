@@ -153,6 +153,8 @@
       title: 'ケースを まもれ', company: 'アクテック', icon: '🧰',
       howto: 'とんでくる どうぐを タップして はねかえそう！',
       endurance: true,
+      // 3回当たってケースが こわれたら、ゲームオーバー（v2.6.1）
+      over: { icon: '💥', text: 'こわれちゃった！' },
       enabled: true, minTier: 0, time: [20, 20, 20],
       metrics: {
         survive: { axis: { steady: 2 }, base: [[12, 5], [10, 5], [8, 4]] },

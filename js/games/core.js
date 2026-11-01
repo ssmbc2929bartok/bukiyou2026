@@ -13,6 +13,7 @@
   const doc = root.document;
   const DEBUG = new URLSearchParams(root.location.search).has('debug');
   const TIMEUP_MS = 1300;   // 時間切れのとき「じかんぎれ！」を出しておく長さ
+  const OVER_ANIM_MS = 1000; // ゲームオーバーのとき、ゲームの演出（ケースが こわれる など）を見せる長さ
   const POP_MS = 1700;
   const COUNT_MS = 600;     // ゲームの前の「3・2・1・スタート！」の1つの長さ      // ゲーム中の文字（pop）を出しておく長さ。css/games.css の .game-pop の animation と合わせる
   const impls = {};
@@ -83,6 +84,7 @@
     const note = def.tierNote && def.tierNote[tier];
     $('game-tier-note').textContent = note || '';
     $('game-tier-note').hidden = !note;
+    $('game-intro').classList.toggle('has-note', Boolean(note));
     $('game-guardian').textContent = def.guardian || '';
     $('game-guardian').hidden = !def.guardian;
     $('game-intro').classList.toggle('has-guardian', Boolean(def.guardian));
@@ -208,18 +210,30 @@
           listeners.forEach(function (l) { l[0].removeEventListener(l[1], l[2], l[3]); });
           timeouts.forEach(clearTimeout);
           const ms = Math.round(performance.now() - playStart);
+          // 時間が終わるのと同時に ゲームオーバーになったら（ケースを まもれ で3回目が当たった など）、ゲームオーバーにする
+          if (reason === 'timeup' && m && m.over) reason = 'gameover';
           // クリアしたか・クリアまでの秒数
           let cleared = reason === 'done' || (reason === 'timeup' && def.endurance);
           if (m && m.cleared !== undefined && m.cleared !== null) cleared = Boolean(m.cleared);
-          if (reason === 'skip' || reason === 'error') cleared = false;
+          if (reason === 'skip' || reason === 'error' || reason === 'gameover') cleared = false;
           const from = timerStart || playStart;
           const clearSec = cleared ? Math.round(((clearAt || performance.now()) - from) / 100) / 10 : null;
           // 時間切れのときは、どのゲームも
           //   1. ゲームの上に「⏰ じかんぎれ！」を出す（TIMEUP_MS）。耐久ゲーム（endurance）は「🏁 しゅうりょう！」
           //   2. ゲームに reveal があれば、答えを見せる（クロスワード：3秒。記録する値は見せる前に取ってある）
           //   3. 「がんばったね！」の画面にする。耐久ゲームは、時間いっぱい がんばれたので「すごい！」
+          // ゲームオーバー（v2.6.1）は、ゲームの演出を見せてから「💥 こわれちゃった！」など（def.over）、そのあと「がんばったね！」
           const finished = reason === 'timeup' && def.endurance;
-          if (reason === 'timeup') {
+          if (reason === 'gameover') {
+            setTimeout(function () {
+              const over = def.over || { icon: '😢', text: 'ざんねん！' };
+              const note = doc.createElement('div');
+              note.className = 'game-timeup over';
+              note.innerHTML = '<span aria-hidden="true">' + over.icon + '</span>' + over.text;
+              stage.appendChild(note);
+              setTimeout(function () { note.remove(); showDone(); }, TIMEUP_MS);
+            }, OVER_ANIM_MS);
+          } else if (reason === 'timeup') {
             const note = doc.createElement('div');
             note.className = 'game-timeup' + (finished ? ' finished' : '');
             note.innerHTML = finished ? '<span aria-hidden="true">🏁</span>しゅうりょう！' : '<span aria-hidden="true">⏰</span>じかんぎれ！';
@@ -239,7 +253,7 @@
           function showDone() {
             $('game-play').hidden = true;
             $('game-done').hidden = false;
-            const tired = reason === 'timeup' && !finished;
+            const tired = (reason === 'timeup' && !finished) || reason === 'gameover';
             $('game-done-emoji').textContent = tired ? '👏' : '🌟';
             $('game-done-text').textContent = reason === 'skip' ? 'つぎに いこう！' : tired ? 'がんばったね！' : 'すごい！';
             setTimeout(function () {
@@ -323,6 +337,8 @@
           ended: function () { return ended; },
           startTimer: startTimer,
           finish: function (metrics) { end('done', metrics); },
+          // ゲームオーバーで終える（v2.6.1）。時間はすぐ止まり、ゲームの演出のあとに def.over を出して「がんばったね！」
+          gameOver: function (metrics) { end('gameover', metrics); },
           rand: rand,
           randInt: randInt,
           pick: pick,

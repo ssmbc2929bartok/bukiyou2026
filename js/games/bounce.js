@@ -1,6 +1,8 @@
 /*
  * 跳ね返し（アクテック）
  * 真ん中のケースに向かって飛んでくる道具をタップして跳ね返す。ケースに3回当たったら終わり。
+ *   3回当たったら、ケースが こわれる演出のあとに ゲームオーバー（「💥 こわれちゃった！」→「がんばったね！」。v2.6.1）。
+ *   時間が終わる瞬間に ケースに届いた道具も当たりに数える（それで3回目なら、こわれた扱い）。
  *   ケースに届くまでの時間：初級 2.5〜3秒 / 中級 1.6〜2.4秒 / 上級 1.1〜2秒（道具ごとにランダム）
  *   同時に飛んでくる数：初級2 / 中級3 / 上級4。後半ほど飛んでくる間隔が短くなる。
  *   曲がって飛ぶもの：中級 15% / 上級 40%
@@ -18,6 +20,7 @@
   const CURVE = [0, 0.15, 0.4];                      // 曲がって飛ぶものの割合
   const LIVES = 3;
   const TOOLS = ['🔨', '🔧', '🔩'];
+  const LAST_MOMENT = 0.12;   // 時間が終わったとき、あと これだけ（秒）で届く道具は当たりに数える
 
   BKF.games.register('bounce', {
     start: function (ctx) {
@@ -34,6 +37,7 @@
       let empty = 0;
       let nextSpawn = 0.8;
       let deadAt = null;
+      let lastT = 0;   // ループの時刻（時間が終わったときの当たりの判定に使う）
 
       function showLives() {
         lives.textContent = '🧰'.repeat(LIVES - hits) + '　'.repeat(hits);
@@ -67,8 +71,37 @@
         };
       }
 
+      // ケースが こわれる：ゆれて、まっぷたつに われて 飛び、ねじや部品が ちらばる
+      function breakCase() {
+        lives.textContent = '';
+        caseEl.classList.add('broken');
+        ['left', 'right'].forEach(function (side) { ctx.el('div', 'case-half ' + side); });
+        ctx.el('div', 'case-boom', null, '💥');
+        ['🔩', '⚙️', '🔩', '⚙️', '🔩'].forEach(function (e, i) {
+          const bit = ctx.el('div', 'case-bit', null, e);
+          bit.style.setProperty('--dx', ((i - 2) * 38) + 'px');
+          bit.style.setProperty('--dy', (-40 - (i % 2) * 30) + 'px');
+        });
+      }
+
+      function hitCase(elapsed) {
+        hits++;
+        outcomes.push({ t: elapsed, ok: false });
+        showLives();
+        caseEl.classList.remove('hit');
+        void caseEl.offsetWidth;
+        caseEl.classList.add('hit');
+        if (hits >= LIVES) {
+          deadAt = elapsed;
+          breakCase();
+          return true;
+        }
+        return false;
+      }
+
       ctx.loop(function (dt, t) {
         if (deadAt !== null) return;
+        lastT = t;
         const elapsed = ctx.elapsed();
         const flying = tools.filter(function (tl) { return tl.state === 'fly'; }).length;
         // 後半ほど間隔を短く
@@ -85,19 +118,10 @@
             tl.y = p.y;
             tl.el.style.left = p.x + 'px';
             tl.el.style.top = p.y + 'px';
-            if (p.k >= 1) {
+            if (p.k >= 1 && deadAt === null) {
               tl.state = 'gone';
               tl.el.remove();
-              hits++;
-              outcomes.push({ t: elapsed, ok: false });
-              showLives();
-              caseEl.classList.remove('hit');
-              void caseEl.offsetWidth;
-              caseEl.classList.add('hit');
-              if (hits >= LIVES) {
-                deadAt = elapsed;
-                ctx.after(500, function () { ctx.finish(metrics()); });
-              }
+              if (hitCase(elapsed)) ctx.gameOver(metrics());
             }
           } else if (tl.state === 'back') {
             tl.x += tl.vx * dt;
@@ -148,6 +172,7 @@
         const r2 = rate(outcomes.filter(function (o) { return o.t >= mid; }));
         return {
           cleared: deadAt === null ? 1 : 0,   // 時間いっぱい守れたらクリア
+          over: deadAt !== null ? 1 : 0,      // こわれて ゲームオーバー（時間が終わるのと同時でも）
           survive: survive,
           decline: r1 !== null && r2 !== null ? r1 - r2 : null,
           empty: empty,
@@ -156,7 +181,22 @@
         };
       }
 
-      return { end: metrics };
+      // 時間が終わったとき：あと少しで届く道具は当たりに数える。それで3回目なら こわれた扱い
+      function end(reason) {
+        if (reason === 'timeup' && deadAt === null) {
+          tools.forEach(function (tl) {
+            if (deadAt !== null || tl.state !== 'fly') return;
+            if (tl.born + tl.travel - lastT <= LAST_MOMENT) {
+              tl.state = 'gone';
+              tl.el.remove();
+              hitCase(ctx.limit);
+            }
+          });
+        }
+        return metrics();
+      }
+
+      return { end: end };
     },
   });
 })(window);
