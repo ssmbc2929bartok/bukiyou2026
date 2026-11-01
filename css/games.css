@@ -1993,6 +1993,19 @@
   font-size: 14px;
 }
 
+/* ロボットの「くっつくよ」のカード：あいて いる わくと、とんで いく「×3」 */
+.hd-block.slot {
+  background: #f1f3f5;
+  color: #ced4da;
+}
+
+.hd-block.tag {
+  width: 30px;
+  background: #ff9f1c;
+  color: #fff;
+  font-size: 13px;
+}
+
 .hd-key {
   width: 30px;
   height: 28px;
