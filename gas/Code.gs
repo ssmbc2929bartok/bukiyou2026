@@ -23,6 +23,15 @@
  *                子どもの「回答」や集計のシートには入れない
  *   リンク     … 結果画面の「もっと見る」を押した記録
  *   エラー     … アプリから送られてきた送信エラーの記録
+ *
+ * 受け口の守り（v2.6.2）
+ *   送り先の URL はサイトから誰でも見えるので、いたずらの送信が来ても シートが こわれないようにする。
+ *   - 決まった形の項目名だけを保存する（allowedKey）。1回の送信の項目は MAX_KEYS まで
+ *   - シートの列は MAX_COLUMNS まで。こえる新しい項目は保存せず、管理者に知らせる
+ *   - 集計に数える値は、決まった形のものだけ（質問の答えは 0〜9、ゲームは GAME_IDS など）
+ *   - 1分に MAX_PER_MINUTE 回をこえる送信は受け付けない（Apps Script の使える量を守る）
+ *   - あやしい回答は保存したうえで suspect 列に理由を書く（short：20秒未満で終わった、time：時刻が おかしい、
+ *     burst：短いあいだに たくさん届いた、answers：答えが少ない、president：社長さんの企業が おかしい）
  */
 
 const SHEET_RESULTS = '回答';
@@ -45,10 +54,29 @@ const MAX_TEXT_LENGTH = 200;
 const DUPLICATE_SECONDS = 6 * 60 * 60;
 const MAIL_INTERVAL_SECONDS = 10 * 60;
 
+// 受け口の守り（v2.6.2）
+const MAX_KEYS = 300;           // 1回の送信で受け取る項目の数（ふつうは 100 くらい）
+const MAX_COLUMNS = 1000;       // シートの列の上限（スプレッドシートの上限は 18,278 列）
+const MAX_PER_MINUTE = 120;     // 1分に受け付ける送信の数（すべての種類を合わせて）
+const BURST_PER_MINUTE = { kids: 20, shacho: 5 };   // これより多く届いた1分の回答には suspect: burst
+const MIN_DURATION_SEC = 20;    // これより早く終わった回答には suspect: short
+const GAME_IDS = ['screw', 'crossword', 'memory', 'trace', 'paint', 'cream', 'heat', 'circuit', 'stone', 'ball', 'robot', 'jump', 'bounce'];
+const AGE_VALUES = ['3', '4', '5', '6', '7', '8', '9', '10', '11+', 'secret'];
+const FIELDS = ['eventId', 'appVersion', 'sessionId', 'startedAt', 'finishedAt', 'durationSec', 'age', 'interest',
+  'type', 'company', 'company2', 'company3', 'similarity', 'fallback', 'condition', 'tier', 'games', 'screen',
+  'mode', 'president', 'presidentOther'];
+const KEY_PATTERNS = [
+  /^a_q[0-9]{1,3}$/,                                              // 質問の答え
+  /^v_[a-z]{1,20}$/,                                              // 回答者ベクトル
+  /^s_[a-z]{1,20}$/,                                              // 企業との類似度
+  new RegExp('^g_(' + GAME_IDS.join('|') + ')_[A-Za-z]{1,24}$'),  // ゲームの値
+];
+
 function doPost(e) {
   try {
     const body = e && e.postData && e.postData.contents;
     if (!body || body.length > MAX_BODY_LENGTH) return output({ ok: false, error: 'bad request' });
+    if (tooMany()) return output({ ok: false, error: 'busy' });
     const data = JSON.parse(body);
     if (data.kind === 'result') return output(saveResult(data));
     if (data.kind === 'error') return output(saveErrors(data));
@@ -56,7 +84,8 @@ function doPost(e) {
     return output({ ok: false, error: 'unknown kind' });
   } catch (err) {
     notifyAdmin('受信中にエラーが起きました', String((err && err.stack) || err));
-    return output({ ok: false, error: String(err) });
+    // くわしい中身は送り主に返さない（管理者へのメールとログにだけ残す）
+    return output({ ok: false, error: 'server error' });
   }
 }
 
@@ -69,6 +98,53 @@ function output(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
+// ------------------------------------------------------------------ 受け口の守り（v2.6.2）
+
+// 1分ごとに数を数える（name ごと）。数えたあとの数を返す
+function countThisMinute(name) {
+  const cache = CacheService.getScriptCache();
+  const key = 'count_' + name + '_' + Math.floor(Date.now() / 60000);
+  const n = Number(cache.get(key) || 0) + 1;
+  cache.put(key, String(n), 120);
+  return n;
+}
+
+function tooMany() {
+  return countThisMinute('all') > MAX_PER_MINUTE;
+}
+
+// 保存してよい項目名か
+function allowedKey(key) {
+  if (FIELDS.indexOf(key) !== -1) return true;
+  return KEY_PATTERNS.some(function (re) { return re.test(key); });
+}
+
+// 企業の id（英小文字）か
+function companyId(value) {
+  const v = String(value || '');
+  return /^[a-z]{1,20}$/.test(v) ? v : '';
+}
+
+// あやしい回答の理由（なければ空）
+function suspectReasons(row) {
+  const reasons = [];
+  const duration = Number(row.durationSec);
+  if (!isFinite(duration) || duration < MIN_DURATION_SEC) reasons.push('short');
+  const started = Date.parse(row.startedAt);
+  const finished = Date.parse(row.finishedAt);
+  const now = Date.now();
+  if (!isFinite(started) || !isFinite(finished) || finished < started || finished > now + 10 * 60000 ||
+      Math.abs((finished - started) / 1000 - duration) > 10) reasons.push('time');
+  const answers = Object.keys(row).filter(function (k) { return k.indexOf('a_') === 0; }).length;
+  if (answers < 5) reasons.push('answers');
+  const shacho = row.mode === 'shacho';
+  if (countThisMinute(shacho ? 'shacho' : 'kids') > BURST_PER_MINUTE[shacho ? 'shacho' : 'kids']) reasons.push('burst');
+  if (shacho && !(row.president === 'other' ? String(row.presidentOther || '').trim() : companyId(row.president))) {
+    reasons.push('president');
+  }
+  return reasons.join(',');
+}
+
 // ------------------------------------------------------------------ 診断結果
 
 function saveResult(data) {
@@ -79,11 +155,17 @@ function saveResult(data) {
   const cache = CacheService.getScriptCache();
   if (cache.get('session_' + sessionId)) return { ok: true, duplicate: true };
 
+  // 決まった形の項目だけを残す（いたずらで列を増やされないように）
+  const keys = Object.keys(data).filter(function (key) { return allowedKey(key); });
+  if (keys.length > MAX_KEYS) return { ok: false, error: 'too many fields' };
+  if (!/^[0-9A-Za-z_-]{1,30}$/.test(String(data.eventId || ''))) return { ok: false, error: 'bad eventId' };
+  if (!/^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/.test(String(data.appVersion || ''))) return { ok: false, error: 'bad appVersion' };
+
   const row = { receivedAt: new Date() };
-  Object.keys(data).forEach(function (key) {
-    if (key === 'kind') return;
-    row[cleanKey(key)] = cleanValue(data[key]);
+  keys.forEach(function (key) {
+    row[key] = cleanValue(data[key]);
   });
+  row.suspect = suspectReasons(row);
 
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -96,26 +178,28 @@ function saveResult(data) {
     }
     appendByHeader(getSheet(SHEET_RESULTS), row);
 
+    // 集計には、決まった形の値だけを数える（いたずらで集計の行を増やされないように）
     const eventId = row.eventId;
+    const games = String(row.games || '').split(',').filter(function (id) { return GAME_IDS.indexOf(id) !== -1; }).slice(0, 5);
     const companyCounts = [];
-    if (row.company) companyCounts.push({ key: [eventId, row.company], column: 2 });
-    if (row.interest) companyCounts.push({ key: [eventId, row.interest], column: 3 });
+    if (companyId(row.company)) companyCounts.push({ key: [eventId, row.company], column: 2 });
+    if (companyId(row.interest)) companyCounts.push({ key: [eventId, row.interest], column: 3 });
     increment(getSheet(SHEET_COMPANY, COMPANY_HEADERS), 2, companyCounts);
 
     const answerCounts = Object.keys(row)
-      .filter(function (key) { return key.indexOf('a_') === 0; })
+      .filter(function (key) { return key.indexOf('a_') === 0 && /^[0-9]$/.test(String(row[key])); })
       .map(function (key) { return { key: [eventId, key.slice(2), row[key]], column: 3 }; });
-    answerCounts.push({ key: [eventId, 'age', row.age], column: 3 });
-    if (row.condition) answerCounts.push({ key: [eventId, 'condition', row.condition], column: 3 });
-    String(row.games || '').split(',').filter(String).forEach(function (id) {
+    if (AGE_VALUES.indexOf(String(row.age)) !== -1) answerCounts.push({ key: [eventId, 'age', row.age], column: 3 });
+    if (row.condition === 'A' || row.condition === 'B') answerCounts.push({ key: [eventId, 'condition', row.condition], column: 3 });
+    games.forEach(function (id) {
       answerCounts.push({ key: [eventId, 'game', id], column: 3 });
     });
     increment(getSheet(SHEET_ANSWER, ANSWER_HEADERS), 3, answerCounts);
 
     // ゲームごとの クリア・クリア秒数・とばした・時間切れ（v2.4.0）
-    const tier = TIER_NAMES[Number(row.tier)] || String(row.tier);
+    const tier = TIER_NAMES[Number(row.tier)];
     const gameCounts = [];
-    String(row.games || '').split(',').filter(String).forEach(function (id) {
+    (tier ? games : []).forEach(function (id) {
       const p = 'g_' + cleanKey(id) + '_';
       const key = [eventId, id, tier];
       gameCounts.push({ key: key, column: 3 });
@@ -147,7 +231,9 @@ function saveClick(data) {
   if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return { ok: false, error: 'bad sessionId' };
   // 社長さん用では送らないが、届いても数えない
   if (data.mode === 'shacho') return { ok: true, ignored: true };
-  const company = cleanKey(data.company);
+  const company = companyId(data.company);
+  if (!company || !/^https?:\/\//.test(String(data.url || ''))) return { ok: false, error: 'bad click' };
+  if (!/^[0-9A-Za-z_-]{1,30}$/.test(String(data.eventId || ''))) return { ok: false, error: 'bad eventId' };
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -226,7 +312,14 @@ function getSheet(name, headers) {
 function appendByHeader(sheet, row) {
   const keys = Object.keys(row);
   let headers = sheet.getLastRow() === 0 ? [] : sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  const missing = keys.filter(function (k) { return headers.indexOf(k) === -1; });
+  let missing = keys.filter(function (k) { return headers.indexOf(k) === -1; });
+  // 列は MAX_COLUMNS まで。こえる新しい項目は保存しない（シートが こわれないように）
+  if (headers.length + missing.length > MAX_COLUMNS) {
+    const dropped = missing.slice(Math.max(0, MAX_COLUMNS - headers.length));
+    missing = missing.slice(0, Math.max(0, MAX_COLUMNS - headers.length));
+    notifyAdmin('シート「' + sheet.getName() + '」の列が上限に達しました',
+      '保存しなかった項目: ' + dropped.slice(0, 50).join(', ') + '\n\nいたずらの送信かもしれません。シートを確認してください。');
+  }
   if (missing.length > 0) {
     sheet.getRange(1, headers.length + 1, 1, missing.length).setValues([missing]);
     headers = headers.concat(missing);
