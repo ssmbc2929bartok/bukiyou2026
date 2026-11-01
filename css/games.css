@@ -171,15 +171,18 @@
   font-weight: 900;
   white-space: nowrap;
   pointer-events: none;
-  animation: pop-up 0.9s ease-out forwards;
+  animation: pop-up 1.7s ease-out forwards;   /* js/games/core.js の POP_MS と合わせる */
 }
 
 .game-pop.good { color: #2a9d8f; }
 .game-pop.bad { color: #e76f51; }
 
+/* ふわっと出て（0.2秒）、1秒くらい止まってから（〜1.4秒）、上へ消える */
 @keyframes pop-up {
   0% { opacity: 0; transform: translate(-50%, -30%) scale(0.7); }
-  20% { opacity: 1; transform: translate(-50%, -60%) scale(1.1); }
+  12% { opacity: 1; transform: translate(-50%, -60%) scale(1.1); }
+  18% { opacity: 1; transform: translate(-50%, -60%) scale(1); }
+  80% { opacity: 1; transform: translate(-50%, -70%) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -140%) scale(1); }
 }
 

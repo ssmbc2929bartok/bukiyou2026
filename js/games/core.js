@@ -13,6 +13,7 @@
   const doc = root.document;
   const DEBUG = new URLSearchParams(root.location.search).has('debug');
   const TIMEUP_MS = 1300;   // 時間切れのとき「じかんぎれ！」を出しておく長さ
+  const POP_MS = 1700;      // ゲーム中の文字（pop）を出しておく長さ。css/games.css の .game-pop の animation と合わせる
   const impls = {};
   const $ = function (id) { return doc.getElementById(id); };
 
@@ -276,12 +277,16 @@
             const r = stage.getBoundingClientRect();
             return { x: e.clientX - r.left, y: e.clientY - r.top };
           },
-          // ふわっと出て消える文字
+          // ふわっと出て、1秒くらい止まってから消える文字（v2.4.0。前は0.9秒で消えて読めなかった）。
+          // 近くに前の文字が残っていたら、重ならないように消す
           pop: function (text, x, y, cls) {
+            stage.querySelectorAll('.game-pop').forEach(function (old) {
+              if (Math.hypot(parseFloat(old.style.left) - x, parseFloat(old.style.top) - y) < 40) old.remove();
+            });
             const p = ctx.el('div', 'game-pop ' + (cls || ''), stage, text);
             p.style.left = x + 'px';
             p.style.top = y + 'px';
-            setTimeout(function () { p.remove(); }, 900);
+            setTimeout(function () { p.remove(); }, POP_MS);
           },
           elapsed: function () {
             return timerStart ? (performance.now() - timerStart) / 1000 : 0;
