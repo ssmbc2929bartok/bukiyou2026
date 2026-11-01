@@ -105,6 +105,9 @@
     else if (cards && cards.length && BKF.howto) howto = BKF.howto.render(demo, cards);
     else demo.innerHTML = '<div class="game-hand">👆</div>';
     $('game-intro').classList.toggle('has-howto', Boolean(howto));
+    // カードの上に「ルール せつめい」。2枚以上なら「スワイプして よんでね」も（v2.6.0）
+    $('game-rules-head').hidden = !howto;
+    $('game-rules-swipe').hidden = !(howto && cards.length > 1);
 
     // ルールのカードを全部見ずに始めたか（見ていないカードがあって「ほんとうに はじめる？」で始めたら 1）
     let rulesSkipped = howto && cards.length > 1 ? 0 : null;

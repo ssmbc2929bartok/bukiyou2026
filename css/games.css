@@ -1834,6 +1834,31 @@
 .hd-dish.green { background: #3cb44b; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12); }
 .hd-dish.orange { background: #f9a03f; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12); }
 
+/* 説明カードの上の「ルール せつめい / スワイプして よんでね」（v2.6.0） */
+.game-rules-head {
+  margin: 6px 0 4px;
+  color: var(--sky-title);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.game-rules-head[hidden] {
+  display: none;
+}
+
+.game-rules-head span {
+  display: block;
+  color: #5b7590;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.game-rules-head span[hidden] {
+  display: none;
+}
+
 /* 説明画面の「はじめる！」の下に出す、保護者向けの文 */
 .game-guardian {
   margin-top: 8px;
@@ -1852,7 +1877,21 @@
   }
   /* 保護者向けの文があるゲームは、説明の絵を少し小さくして1画面に収める */
   .game-intro.has-guardian .howto-scene {
-    width: min(100%, 300px, 34vh);
+    width: min(100%, 300px, 24vh);
+  }
+  /* そのうえで、「スワイプして よんでね」を同じ行に並べる（ボールころがしが 540px に収まるように） */
+  .game-intro.has-guardian .game-rules-head span {
+    display: inline;
+    margin-left: 6px;
+  }
+  /* 「ルール せつめい / スワイプして よんでね」も詰める */
+  .game-rules-head {
+    margin: 2px 0;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  .game-rules-head span {
+    font-size: 11px;
   }
 }
 

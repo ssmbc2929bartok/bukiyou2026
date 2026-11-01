@@ -216,6 +216,18 @@
     ],
   };
 
+  // 社長さん用（URL に ?shacho）で最初に聞く「どの企業の社長さんか」（v2.6.0）。
+  // 「ここにない」を選んだら、企業名を書いてもらう。答えは GAS の「社長回答」シートに入る
+  BKF.presidentQuestion = {
+    id: 'president',
+    text: 'どの{企業|きぎょう}の{社長|しゃちょう}さんですか？',
+    hint: 'あてはまる{企業|きぎょう}を ひとつ えらんでください',
+    otherLabel: 'ここにない',
+    otherEmoji: '✏️',
+    otherPlaceholder: '企業名を書いてください',
+    otherMissing: '企業名を書いてください',
+  };
+
   // 結果発表の前に聞く「気になる企業」。ニューラルネットワークの正解ラベルに使う。診断の計算には使わない。
   BKF.interestQuestion = {
     id: 'interest',

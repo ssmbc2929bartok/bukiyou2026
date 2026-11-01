@@ -1021,6 +1021,60 @@ h1[tabindex="-1"]:focus {
   box-shadow: 0 2px 0 #1f7a6f;
 }
 
+/* 社長さん用：ミニゲームを えらんで あそぶ画面へ（v2.6.0） */
+.games-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  background: linear-gradient(#ffd166, #f4a261);
+  box-shadow: 0 7px 0 #c97b3a, 0 12px 20px rgba(244, 162, 97, 0.3);
+  color: #fff;
+  font-size: 22px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.games-button[hidden] {
+  display: none;
+}
+
+.games-button:active {
+  box-shadow: 0 2px 0 #c97b3a;
+}
+
+/* 社長さん用の「ここにない」：企業名を書く欄 */
+.other-input {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: 3px solid var(--selected);
+  border-radius: 16px;
+  background: #fff;
+  color: #26384a;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.other-input[hidden] {
+  display: none;
+}
+
+.other-input.missing {
+  border-color: #e63946;
+  background: #fff0f1;
+  animation: shake-input 0.4s ease;
+}
+
+@keyframes shake-input {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
 /* ?debug を付けたときの確認用 */
 .debug {
   margin-top: 24px;
@@ -1749,49 +1803,30 @@ h1[tabindex="-1"]:focus {
   86% { transform: rotate(6deg) scale(1.08); }
 }
 
-/* ルールの説明：カードが めくれて、点が 1→2→3 と すすむ */
-.guide-rule {
+/* にている かいしゃ：あなたと かいしゃの あいだで ハートが どきどき */
+.guide-match {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  font-size: 18px;
 }
 
-.guide-rule-card {
-  padding: 3px 10px;
-  border: 2px solid #d9cdf3;
-  border-radius: 10px;
-  background: #fff;
-  font-size: 14px;
-  animation: guide-flip 2.4s ease-in-out infinite;
+.guide-match b {
+  font-weight: normal;
+  line-height: 1;
+}
+
+.guide-match i {
+  font-style: normal;
+  animation: guide-beat 1.2s ease-in-out infinite;
   animation-delay: calc(var(--n) * 0.7s + 0.8s);
 }
 
-@keyframes guide-flip {
-  0%, 25%, 100% { transform: none; }
-  33% { transform: rotateY(90deg); }
-  41% { transform: none; }
+@keyframes guide-beat {
+  0%, 40%, 100% { transform: scale(1); }
+  15% { transform: scale(1.35); }
+  28% { transform: scale(1.1); }
 }
-
-.guide-rule-dots {
-  display: flex;
-  gap: 4px;
-}
-
-.guide-rule-dots i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #d9cdf3;
-  animation: guide-page 2.4s steps(1) infinite;
-  animation-delay: calc(var(--n) * 0.7s + 0.8s);
-}
-
-.guide-rule-dots i:nth-child(2) { animation-name: guide-page-2; }
-.guide-rule-dots i:nth-child(3) { animation-name: guide-page-3; }
-
-@keyframes guide-page { 0% { background: var(--mark-4); } 33% { background: #d9cdf3; } }
-@keyframes guide-page-2 { 0% { background: #d9cdf3; } 33% { background: var(--mark-4); } 66% { background: #d9cdf3; } }
-@keyframes guide-page-3 { 0% { background: #d9cdf3; } 66% { background: var(--mark-4); } }
 
 /* 「わかった！」は、3つ目が出たあとに出す（押すのは いつでも できる） */
 #guide-ok {

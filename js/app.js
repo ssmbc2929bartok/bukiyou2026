@@ -4,6 +4,8 @@
  *   → F-002 診断 → F-003 送信 → S-004 結果 → S-001 に戻る
  *   S-005 未記入ポップアップ / S-006 データ送信エラー
  * ミニゲームの数は条件 A/B でちがう（docs/games.md）。年れいを答えたときに、出すゲームを決める。
+ * 社長さん用（URL に ?shacho。v2.6.0）：最初に「どの企業の社長さんですか？」を聞き、年れいと
+ * 「気になる企業」は聞かない（ゲームは中級）。結果画面から、ミニゲームを えらんで あそぶ画面（?shacho&games）へ行ける。
  */
 (function (root) {
   'use strict';
@@ -16,6 +18,8 @@
   const OTHER_EMOJI = '🤔';
   const MIN_LOADING_MS = 1600;
   const DEBUG = new URLSearchParams(root.location.search).has('debug');
+  const SHACHO = new URLSearchParams(root.location.search).has('shacho');
+  const SHACHO_TIER = 1;   // 社長さん用のゲームの難易度（中級）
 
   const $ = function (id) { return doc.getElementById(id); };
 
@@ -24,14 +28,14 @@
 
   // 質問画面で順に出すもの。slots: [{ after: 何問目のあと, id: ゲーム }]
   function buildSteps(slots) {
-    const list = [{ kind: 'age' }];
+    const list = [{ kind: SHACHO ? 'president' : 'age' }];
     questions.forEach(function (q, i) {
       list.push({ kind: 'question', question: q });
       slots.forEach(function (slot) {
         if (slot.after === i + 1) list.push({ kind: 'game', gameId: slot.id, result: null });
       });
     });
-    list.push({ kind: 'interest' });
+    if (!SHACHO) list.push({ kind: 'interest' });
     return list;
   }
 
@@ -46,6 +50,8 @@
       answers: {},
       age: null,
       interest: null,
+      president: null,       // 社長さん用：企業の id か 'other'
+      presidentOther: '',    // 社長さん用：「ここにない」のときに書いた企業名
       pending: null,
       returnToConfirm: false,
       condition: Math.random() < 0.5 ? 'A' : 'B',
@@ -59,7 +65,7 @@
   // 年れいから難易度を決め、出すゲームを選ぶ（まだゲームを遊んでいないときだけ）
   function planGames() {
     if (state.games.length > 0) return;
-    state.tier = BKF.tierOf(state.age);
+    state.tier = SHACHO ? SHACHO_TIER : BKF.tierOf(state.age);
     const after = BKF.config.gameConditions[state.condition].after;
     const ids = BKF.games.choose(state.tier, after.length);
     steps = buildSteps(ids.map(function (id, i) { return { after: after[i], id: id }; }));
@@ -119,13 +125,15 @@
         sub: 'ミニゲームは とばす ことも できるよ',
         art: track(true) + '<span class="guide-skip" aria-hidden="true">とばす</span>',
       });
-      items.push({
-        icon: '📖',
-        text: 'ミニゲームの まえには ルールの せつめいが あるよ',
-        art: '<span class="guide-rule" aria-hidden="true"><span class="guide-rule-card">🔧 → 🔩</span>' +
-          '<span class="guide-rule-dots"><i></i><i></i><i></i></span></span>',
-      });
     }
+    // さいごに、にている かいしゃが わかる（社長さん用では「社長さんの こたえと…」は出さない）
+    items.push({
+      icon: '🏭',
+      text: 'せいかくと にている かいしゃが わかるよ！',
+      sub: SHACHO ? '' : 'じっさいの しゃちょうさんの こたえと にてるかな？',
+      art: '<span class="guide-match" aria-hidden="true"><b>🙋</b><i>💞</i>' +
+        companies.slice(0, 4).map(function (c) { return '<b>' + c.icon + '</b>'; }).join('') + '</span>',
+    });
     const list = $('guide-list');
     list.innerHTML = items.map(function (it, i) {
       return '<li class="guide-item" style="--n:' + i + '">' +
@@ -161,6 +169,25 @@
             wide: last && a.options.length % 3 === 1,
           };
         }),
+      };
+    }
+
+    if (step.kind === 'president') {
+      const pq = BKF.presidentQuestion;
+      return {
+        text: pq.text,
+        hint: pq.hint,
+        progress: 'はじめに',
+        layout: 'companies',
+        saved: state.president,
+        choices: companies
+          .map(function (c, i) {
+            return { value: c.id, text: c.short, emoji: c.icon, cls: 'choice-' + ((i % 4) + 1) };
+          })
+          .concat([{
+            value: 'other', text: pq.otherLabel, emoji: pq.otherEmoji, cls: 'choice-other',
+            wide: companies.length % 2 === 0,
+          }]),
       };
     }
 
@@ -262,6 +289,12 @@
   }
 
   function renderStep(direction) {
+    // 社長さん用は「気になる企業」がないので、最後のミニゲームのあとは確認画面へ
+    if (state.stepIndex >= steps.length) {
+      state.stepIndex = steps.length - 1;
+      renderConfirm();
+      return;
+    }
     const step = steps[state.stepIndex];
     if (step.kind === 'game') {
       // 遊んだゲームはもう一度は出さない（もどるときは飛ばす）
@@ -309,6 +342,9 @@
     });
 
     $('q-message').textContent = state.pending === null ? 'ひとつ えらぼう！' : 'これで いいかな？';
+    $('q-other').placeholder = BKF.presidentQuestion.otherPlaceholder;
+    $('q-other').value = state.presidentOther;
+    showOtherInput(step.kind === 'president' && state.pending === 'other', false);
 
     const card = $('screen-question').querySelector('.survey');
     card.classList.remove('slide-in', 'slide-back');
@@ -318,8 +354,15 @@
     show('screen-question');
   }
 
+  // 社長さん用の「ここにない」：企業名を書く欄
+  function showOtherInput(on, focus) {
+    $('q-other').hidden = !on;
+    if (on && focus) $('q-other').focus();
+  }
+
   function select(button, value) {
     state.pending = value;
+    showOtherInput(steps[state.stepIndex].kind === 'president' && value === 'other', true);
     $('q-choices').querySelectorAll('.choice').forEach(function (b) {
       b.classList.remove('selected');
       b.setAttribute('aria-pressed', 'false');
@@ -340,7 +383,20 @@
       return;
     }
     const step = steps[state.stepIndex];
-    if (step.kind === 'age') {
+    if (step.kind === 'president') {
+      const other = $('q-other').value.trim();
+      if (state.pending === 'other' && !other) {
+        // スマホでは下のメッセージが隠れるので、欄そのものを赤くして ゆらす
+        $('q-message').textContent = BKF.presidentQuestion.otherMissing;
+        $('q-other').classList.remove('missing');
+        void $('q-other').offsetWidth;
+        $('q-other').classList.add('missing');
+        $('q-other').focus();
+        return;
+      }
+      state.president = state.pending;
+      state.presidentOther = state.pending === 'other' ? other : '';
+    } else if (step.kind === 'age') {
       state.age = state.pending;
       planGames();
     } else if (step.kind === 'interest') state.interest = state.pending;
@@ -375,6 +431,9 @@
   function answerLabel(step) {
     const view = stepView(step);
     const choice = view.choices.filter(function (c) { return String(c.value) === String(view.saved); })[0];
+    if (choice && step.kind === 'president' && choice.value === 'other') {
+      return { text: choice.text + '（' + state.presidentOther + '）', emoji: choice.emoji };
+    }
     return choice || { text: '（まだ）', emoji: '' };
   }
 
@@ -467,6 +526,14 @@
       payload['g_' + id + '_replaced'] = state.replaced[id];
     });
     payload.screen = root.innerWidth + 'x' + root.innerHeight;
+    // 社長さん用：GAS が「社長回答」シートに入れる（子どもの回答・集計には入れない）
+    if (SHACHO) {
+      payload.mode = 'shacho';
+      payload.president = state.president;
+      payload.presidentOther = state.presidentOther;
+      delete payload.interest;
+      delete payload.age;
+    }
     return payload;
   }
 
@@ -547,7 +614,8 @@
     const link = $('result-link');
     link.href = company.url || BKF.tradingCardUrl;
     link.onclick = function () {
-      BKF.api.sendClick({ sessionId: payload.sessionId, company: company.id, url: link.href });
+      // 社長さん用では、企業集計の「ページを開いた回数」に数えないよう送らない
+      if (!SHACHO) BKF.api.sendClick({ sessionId: payload.sessionId, company: company.id, url: link.href });
     };
 
     const reasons = $('result-reasons');
@@ -608,6 +676,7 @@
 
   function start() {
     resetState();
+    if (SHACHO) planGames();   // 年れいを聞かないので、はじめに ゲームを決める
     renderGuide();
   }
 
@@ -617,9 +686,11 @@
   }
 
   $('top-note').innerHTML = 'しつもんと ミニゲームに こたえてね<br>（やく 3〜5ふん）';
+  $('games-button').hidden = !SHACHO;
   doc.querySelectorAll('[data-version]').forEach(function (el) { el.textContent = 'v' + BKF.config.appVersion; });
   $('start-button').addEventListener('click', start);
   $('guide-ok').addEventListener('click', function () { renderStep('next'); });
+  $('q-other').addEventListener('input', function () { $('q-other').classList.remove('missing'); });
   $('q-submit').addEventListener('click', submitStep);
   $('q-back').addEventListener('click', function () {
     if ($('q-back').getAttribute('aria-disabled') !== 'true') goBack();
@@ -640,21 +711,35 @@
 
   // 確認用：?debug&games でミニゲームの一覧を出し、えらんだゲームだけを遊ぶ（データは送らない）。
   // ?debug&play=ゲームid&tier=0〜2 で、そのゲームをすぐに始める。
+  // 社長さん用（?shacho&games）も同じ画面を使うが、id・停止中・結果の値などのデバッグ用の情報は出さない
   const params = new URLSearchParams(root.location.search);
+  const GAME_LIST = DEBUG || SHACHO;
+  const BASE_QUERY = DEBUG ? '?debug' : '?shacho';
 
   function debugLink(text, query, cls) {
     const a = doc.createElement('a');
     a.className = cls || 'debug-link';
-    a.href = '?debug' + query;
+    a.href = BASE_QUERY + query;
     a.textContent = text;
     return a;
   }
 
-  if (DEBUG && params.get('play')) {
+  if (GAME_LIST && params.get('play')) {
     const id = params.get('play');
     const tier = Number(params.get('tier') || 1);
     show('screen-game');
     BKF.games.run(id, tier).then(function (res) {
+      if (!DEBUG) {
+        const navOnly = doc.createElement('div');
+        navOnly.className = 'debug-nav';
+        const replay = debugLink('もういちど', '');
+        replay.href = root.location.search;
+        navOnly.appendChild(replay);
+        navOnly.appendChild(debugLink('ゲームを えらびなおす', '&games'));
+        $('game-done').appendChild(navOnly);
+        $('game-done').hidden = false;
+        return;
+      }
       const vec = BKF.gameScore(id, tier, res.metrics);
       const box = doc.createElement('pre');
       box.className = 'debug';
@@ -671,16 +756,22 @@
       $('game-done').hidden = false;
       root.BKF.lastGame = res;
     });
-  } else if (DEBUG && params.has('games')) {
+  } else if (GAME_LIST && params.has('games')) {
     const list = $('debug-game-list');
     const disabled = BKF.config.disabledGames || [];
     list.innerHTML = '';
+    if (!DEBUG) {
+      $('debug-games-title').textContent = 'ミニゲームで あそぶ';
+      doc.querySelector('.debug-games-note').textContent = 'あそびたい ゲームの むずかしさを えらんでね';
+      doc.querySelector('#screen-debug-games .debug-link').href = '?shacho';
+    }
     Object.keys(BKF.gameDefs).forEach(function (id) {
       const def = BKF.gameDefs[id];
+      if (!DEBUG && !def.enabled) return;   // 社長さん用では、作りかけのゲームは出さない
       const li = doc.createElement('li');
       const off = !def.enabled ? '（enabled: false）' : disabled.indexOf(id) !== -1 ? '（disabledGames で停止中）' : '';
       li.innerHTML = '<span class="debug-game-name">' + def.icon + ' ' + U.escapeHtml(def.title) +
-        ' <small>' + id + U.escapeHtml(off) + '</small></span>';
+        (DEBUG ? ' <small>' + id + U.escapeHtml(off) + '</small>' : '') + '</span>';
       const tiers = doc.createElement('span');
       tiers.className = 'debug-game-tiers';
       BKF.tiers.forEach(function (t) {

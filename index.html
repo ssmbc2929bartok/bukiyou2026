@@ -103,6 +103,8 @@
           <p id="q-hint"></p>
         </header>
         <section class="choices" id="q-choices" aria-label="こたえ"></section>
+        <!-- 社長さん用の「ここにない」を選んだときだけ出す（v2.6.0） -->
+        <input type="text" class="other-input" id="q-other" maxlength="100" autocomplete="organization" aria-label="企業名" hidden>
         <p class="message" id="q-message" aria-live="polite"></p>
         <button type="button" class="submit" id="q-submit">これに きめた！</button>
       </div>
@@ -132,6 +134,7 @@
           <p class="game-howto" id="game-howto"></p>
           <p class="game-tier-note" id="game-tier-note" hidden></p>
           <p class="game-time" id="game-time"></p>
+          <p class="game-rules-head" id="game-rules-head" hidden>ルール せつめい<span id="game-rules-swipe">スワイプして よんでね</span></p>
           <div class="game-demo" id="game-demo" aria-hidden="true"></div>
           <button type="button" class="submit" id="game-start">はじめる！</button>
           <p class="game-guardian" id="game-guardian" hidden></p>
@@ -181,6 +184,8 @@
         </div>
 
         <button type="button" class="big-button again-button" id="again-button">もういちど あそぶ</button>
+        <!-- 社長さん用だけ：ミニゲームを えらんで あそぶ画面へ（v2.6.0） -->
+        <a class="big-button games-button" id="games-button" href="?shacho&amp;games" hidden>ミニゲームで あそぶ</a>
         <p class="app-version" data-version></p>
         <div class="debug" id="debug" hidden></div>
       </div>
