@@ -16,6 +16,8 @@
  *                「結果画面からページを開いた回数」
  *   回答集計   … 開催回 × 質問 × 選択肢ごとの回数（回答のばらつき・かたよりの確認用）。
  *                年れい・実験条件（A/B）・出たゲームの回数も数える
+ *   ゲーム集計 … 開催回 × ゲーム × 難易度ごとの、遊んだ回数・クリアした回数・クリア秒数の平均・
+ *                とばした回数・時間切れの回数（v2.4.0）
  *   リンク     … 結果画面の「もっと見る」を押した記録
  *   エラー     … アプリから送られてきた送信エラーの記録
  */
@@ -25,10 +27,13 @@ const SHEET_COMPANY = '企業集計';
 const SHEET_ANSWER = '回答集計';
 const SHEET_ERRORS = 'エラー';
 const SHEET_LINKS = 'リンク';
+const SHEET_GAMES = 'ゲーム集計';
 
 const COMPANY_HEADERS = ['開催回', '企業', '診断結果になった回数', '気になる企業に選ばれた回数', 'ページを開いた回数'];
 const ANSWER_HEADERS = ['開催回', '質問', '選択肢', '回数'];
 const LINK_HEADERS = ['受信日時', '開催回', 'sessionId', '企業', 'URL'];
+const GAME_HEADERS = ['開催回', 'ゲーム', '難易度', '遊んだ回数', 'クリアした回数', 'クリア秒数の合計', 'クリア秒数の平均', 'とばした回数', '時間切れの回数'];
+const TIER_NAMES = ['初級', '中級', '上級'];
 const ERROR_HEADERS = ['受信日時', '開催回', 'アプリ版', '発生日時', 'sessionId', '1回目', '2回目', 'オンライン'];
 
 const MAX_BODY_LENGTH = 20000;
@@ -96,6 +101,27 @@ function saveResult(data) {
       answerCounts.push({ key: [eventId, 'game', id], column: 3 });
     });
     increment(getSheet(SHEET_ANSWER, ANSWER_HEADERS), 3, answerCounts);
+
+    // ゲームごとの クリア・クリア秒数・とばした・時間切れ（v2.4.0）
+    const tier = TIER_NAMES[Number(row.tier)] || String(row.tier);
+    const gameCounts = [];
+    String(row.games || '').split(',').filter(String).forEach(function (id) {
+      const p = 'g_' + cleanKey(id) + '_';
+      const key = [eventId, id, tier];
+      gameCounts.push({ key: key, column: 3 });
+      if (Number(row[p + 'cleared']) === 1) {
+        gameCounts.push({ key: key, column: 4 });
+        const sec = Number(row[p + 'clearSec']);
+        if (row[p + 'clearSec'] !== '' && isFinite(sec)) gameCounts.push({ key: key, column: 5, add: sec });
+      }
+      if (Number(row[p + 'skipped']) === 1) gameCounts.push({ key: key, column: 7 });
+      if (row[p + 'reason'] === 'timeup') gameCounts.push({ key: key, column: 8 });
+    });
+    increment(getSheet(SHEET_GAMES, GAME_HEADERS), 3, gameCounts, function (r) {
+      // クリア秒数の合計は0.1秒で丸め、平均 = 合計 / クリアした回数
+      r[5] = Math.round(Number(r[5]) * 10) / 10;
+      r[6] = Number(r[4]) > 0 ? Math.round((Number(r[5]) / Number(r[4])) * 10) / 10 : '';
+    });
   } finally {
     lock.releaseLock();
   }
@@ -201,9 +227,10 @@ function appendByHeader(sheet, row) {
 /*
  * 集計シートの回数を増やす
  *   keyLength : 先頭から何列がキーか
- *   entries   : [{ key: [...], column: 何列目（0始まり）を +1 するか }]
+ *   entries   : [{ key: [...], column: 何列目（0始まり）を増やすか, add: 増やす数（なければ 1） }]
+ *   after     : 増やした行ごとに呼ぶ関数（平均を計算しなおすときなど。なくてもよい）
  */
-function increment(sheet, keyLength, entries) {
+function increment(sheet, keyLength, entries, after) {
   if (entries.length === 0) return;
   const width = sheet.getLastColumn();
   const values = sheet.getDataRange().getValues();
@@ -221,7 +248,8 @@ function increment(sheet, keyLength, entries) {
       r = values.length - 1;
       index[id] = r;
     }
-    values[r][en.column] = (Number(values[r][en.column]) || 0) + 1;
+    values[r][en.column] = (Number(values[r][en.column]) || 0) + (en.add === undefined ? 1 : en.add);
+    if (after) after(values[r]);
   });
   sheet.getRange(1, 1, values.length, width).setValues(values);
 }
@@ -248,4 +276,5 @@ function setup() {
   getSheet(SHEET_ANSWER, ANSWER_HEADERS);
   getSheet(SHEET_ERRORS, ERROR_HEADERS);
   getSheet(SHEET_LINKS, LINK_HEADERS);
+  getSheet(SHEET_GAMES, GAME_HEADERS);
 }

@@ -65,7 +65,10 @@
 
   /*
    * ゲームを1つ遊ぶ。結果:
-   *   { id, tier, metrics, skipped, reason, ms, firstTouchMs, taps }
+   *   { id, tier, metrics, skipped, reason, ms, firstTouchMs, taps, cleared, clearSec }
+ *   cleared  : クリアしたら 1。ふつうは自分で終わったら（reason 'done'）、耐久ゲームは時間いっぱい がんばれたら。
+ *              ゲームが metrics.cleared を返したら、それを使う（ケースを まもれ・せんを なぞろう）
+ *   clearSec : クリアまでの秒数（「スタート！」か、えあわせは カードをふせてから、ctx.clear() を呼んだ瞬間まで）
    *   傾きが使えなかったときは { id, tier, unavailable: true }
    */
   function run(id, tier) {
@@ -158,6 +161,7 @@
         let handle = null;
         let playStart = performance.now();
         let counting = true;      // 「3・2・1・スタート！」のあいだ（タップを数えない）
+        let clearAt = null;       // クリアした瞬間（ctx.clear）
 
         function on(target, type, fn, opts) {
           target.addEventListener(type, fn, opts);
@@ -201,6 +205,12 @@
           listeners.forEach(function (l) { l[0].removeEventListener(l[1], l[2], l[3]); });
           timeouts.forEach(clearTimeout);
           const ms = Math.round(performance.now() - playStart);
+          // クリアしたか・クリアまでの秒数
+          let cleared = reason === 'done' || (reason === 'timeup' && def.endurance);
+          if (m && m.cleared !== undefined && m.cleared !== null) cleared = Boolean(m.cleared);
+          if (reason === 'skip' || reason === 'error') cleared = false;
+          const from = timerStart || playStart;
+          const clearSec = cleared ? Math.round(((clearAt || performance.now()) - from) / 100) / 10 : null;
           // 時間切れのときは、どのゲームも
           //   1. ゲームの上に「⏰ じかんぎれ！」を出す（TIMEUP_MS）。耐久ゲーム（endurance）は「🏁 しゅうりょう！」
           //   2. ゲームに reveal があれば、答えを見せる（クロスワード：3秒。記録する値は見せる前に取ってある）
@@ -234,6 +244,7 @@
               resolve({
                 id: id, tier: tier, metrics: m || {}, skipped: reason === 'skip', reason: reason,
                 ms: ms, firstTouchMs: firstTouchMs, taps: taps, rulesSkipped: rulesSkipped,
+                cleared: cleared ? 1 : 0, clearSec: clearSec,
               });
             }, 1100);
           }
@@ -288,6 +299,8 @@
             const r = stage.getBoundingClientRect();
             return { x: e.clientX - r.left, y: e.clientY - r.top };
           },
+          // クリアした瞬間に呼ぶ（「ゴール！」などを見せてから finish するゲームで、見せている時間を数えないため）
+          clear: function () { if (clearAt === null) clearAt = performance.now(); },
           // ゲームの枠いっぱいに、大きな文字を ms のあいだ出す（「3・2・1」「あんきタイム！」など）
           banner: banner,
           // ふわっと出て、1秒くらい止まってから消える文字（v2.4.0。前は0.9秒で消えて読めなかった）。

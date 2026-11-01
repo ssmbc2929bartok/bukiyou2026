@@ -294,6 +294,7 @@
       function check() {
         if (correctCount() === open.length) {
           doneAt = ctx.elapsed();
+          ctx.clear();
           ctx.pop('せいかい！', W / 2, H * 0.3, 'good');
           ctx.after(700, function () { ctx.finish(metrics()); });
         } else if (open.every(function (k) { return cells[k].value; })) {

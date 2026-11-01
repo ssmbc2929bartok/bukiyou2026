@@ -91,7 +91,10 @@
           near.el.classList.add('done');
           done++;
           ctx.pop('しまった！', near.x, lane.screwY - 40, 'good');
-          if (done === total) ctx.after(400, function () { ctx.finish(metrics()); });
+          if (done === total) {
+            ctx.clear();
+            ctx.after(400, function () { ctx.finish(metrics()); });
+          }
         } else if (off >= 0.5) {
           early++;
           ctx.pop('まだ！', lane.x, lane.wrenchY + 40, 'bad');

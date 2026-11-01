@@ -88,7 +88,10 @@
           a.el.classList.add('matched');
           b.el.classList.add('matched');
           matched++;
-          if (matched === pairs) ctx.after(500, function () { ctx.finish(metrics()); });
+          if (matched === pairs) {
+            ctx.clear();
+            ctx.after(500, function () { ctx.finish(metrics()); });
+          }
         } else {
           misses++;
           locked = true;

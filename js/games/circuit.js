@@ -136,6 +136,7 @@
             finished = true;
             speaker.textContent = '🔊 ♪ ♫';
             speaker.classList.add('on');
+            ctx.clear();
             ctx.after(900, function () { ctx.finish(metrics()); });
           }
           return false;

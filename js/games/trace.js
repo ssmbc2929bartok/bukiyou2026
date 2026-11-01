@@ -281,6 +281,7 @@
       function next() {
         drawing = null;
         if (li === lines.length - 1) {
+          if (lines.every(function (l) { return coverage(l) >= 0.9; })) ctx.clear();
           ctx.pop(coverage(lines[li]) >= 0.9 ? 'できた！' : 'おしまい！', W / 2, H / 2, 'good');
           ctx.after(400, function () { ctx.finish(metrics()); });
           li = lines.length;   // これ以上なぞらない
@@ -299,6 +300,7 @@
           cover: covers.reduce(function (a, b) { return a + b; }, 0) / covers.length,
           lines: Math.min(li, lines.length),
           shapes: lines.map(function (l) { return l.id; }).join(','),
+          cleared: covers.every(function (c) { return c >= 0.9; }) ? 1 : 0,
           misstart: misstart,
         };
       }

@@ -215,6 +215,7 @@
               state = 'goal';
               reached = true;
               msg.textContent = 'ゴール！';
+              ctx.clear();
               ctx.after(700, function () { ctx.finish(metrics()); });
             }
           } else {

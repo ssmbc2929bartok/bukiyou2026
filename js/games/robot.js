@@ -247,6 +247,7 @@
 
       function win() {
         solved = true;
+        ctx.clear();
         ctx.el('div', 'robot-goal-show', null, '<img src="assets/img/oit-campus.webp" alt="">ゴール！');
         ctx.after(1300, function () { ctx.finish(metrics()); });
       }

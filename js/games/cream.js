@@ -236,6 +236,7 @@
             ctx.pop('せいかい！', ctx.width() / 2, 140, 'good');
             qi++;
             if (qi >= questions.length) {
+              ctx.clear();
               ctx.after(500, function () { ctx.finish(metrics()); });
               return;
             }

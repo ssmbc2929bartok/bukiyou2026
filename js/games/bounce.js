@@ -147,6 +147,7 @@
         const r1 = rate(outcomes.filter(function (o) { return o.t < mid; }));
         const r2 = rate(outcomes.filter(function (o) { return o.t >= mid; }));
         return {
+          cleared: deadAt === null ? 1 : 0,   // 時間いっぱい守れたらクリア
           survive: survive,
           decline: r1 !== null && r2 !== null ? r1 - r2 : null,
           empty: empty,

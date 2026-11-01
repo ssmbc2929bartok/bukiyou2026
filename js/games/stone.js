@@ -75,6 +75,7 @@
             });
           }
           counter.textContent = 'こなに なった！';
+          ctx.clear();
           ctx.after(900, function () { ctx.finish(metrics()); });
         }
       });
