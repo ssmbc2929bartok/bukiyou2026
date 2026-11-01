@@ -16,6 +16,7 @@
 
   BKF.games.register('memory', {
     delayTimer: true,
+    countdown: false,   // 自分で「あんきタイム！」→ 数えさげ →「スタート！」をする
     start: function (ctx) {
       const pairs = PAIRS[ctx.tier];
       const items = ctx.shuffle(BKF.memoryItems).slice(0, pairs);
@@ -49,9 +50,12 @@
         ctx.on(b, 'click', function () { flip(card); });
       });
 
-      // 5秒見せる
+      // 「あんきタイム！」を出してから5秒見せ、「スタート！」でふせて始める（v2.4.0）
+      ctx.banner('あんきタイム！', 1000);
       let left = 5;
-      (function count() {
+      msg.textContent = 'おぼえてね！ 5';
+      ctx.after(1000, count);
+      function count() {
         ctx.after(1000, function () {
           left--;
           if (left > 0) {
@@ -59,12 +63,13 @@
             count();
             return;
           }
+          ctx.banner('スタート！', 700);
           cards.forEach(function (c) { c.el.classList.remove('open'); });
           msg.textContent = 'おなじ えを 2まい めくろう！';
           locked = false;
           ctx.startTimer();
         });
-      })();
+      }
 
       function metrics() {
         return { misses: misses, matched: matched, pairs: pairs };

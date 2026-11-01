@@ -13,7 +13,8 @@
   const doc = root.document;
   const DEBUG = new URLSearchParams(root.location.search).has('debug');
   const TIMEUP_MS = 1300;   // 時間切れのとき「じかんぎれ！」を出しておく長さ
-  const POP_MS = 1700;      // ゲーム中の文字（pop）を出しておく長さ。css/games.css の .game-pop の animation と合わせる
+  const POP_MS = 1700;
+  const COUNT_MS = 600;     // ゲームの前の「3・2・1・スタート！」の1つの長さ      // ゲーム中の文字（pop）を出しておく長さ。css/games.css の .game-pop の animation と合わせる
   const impls = {};
   const $ = function (id) { return doc.getElementById(id); };
 
@@ -155,7 +156,8 @@
         let firstTouchMs = null;
         let taps = 0;
         let handle = null;
-        const playStart = performance.now();
+        let playStart = performance.now();
+        let counting = true;      // 「3・2・1・スタート！」のあいだ（タップを数えない）
 
         function on(target, type, fn, opts) {
           target.addEventListener(type, fn, opts);
@@ -163,9 +165,18 @@
         }
 
         on(stage, 'pointerdown', function () {
+          if (counting) return;
           taps++;
           if (firstTouchMs === null) firstTouchMs = Math.round(performance.now() - playStart);
         }, true);
+
+        function banner(text, ms) {
+          const b = doc.createElement('div');
+          b.className = 'game-countdown' + (text.length > 2 ? ' word' : '');
+          b.textContent = text;
+          stage.appendChild(b);
+          timeouts.push(setTimeout(function () { b.remove(); }, ms));
+        }
 
         function startTimer() {
           if (timerStart || !limit) return;
@@ -277,6 +288,8 @@
             const r = stage.getBoundingClientRect();
             return { x: e.clientX - r.left, y: e.clientY - r.top };
           },
+          // ゲームの枠いっぱいに、大きな文字を ms のあいだ出す（「3・2・1」「あんきタイム！」など）
+          banner: banner,
           // ふわっと出て、1秒くらい止まってから消える文字（v2.4.0。前は0.9秒で消えて読めなかった）。
           // 近くに前の文字が残っていたら、重ならないように消す
           pop: function (text, x, y, cls) {
@@ -300,12 +313,29 @@
           shuffle: shuffle,
         };
 
-        if (!impl.delayTimer) startTimer();
-        try {
-          handle = impl.start(ctx);
-        } catch (err) {
-          console.error(err);
-          end('error', {});
+        // ゲームの前に「3・2・1・スタート！」を出してから始める（v2.4.0）。
+        // 自分で数えるゲーム（えあわせ・みんなで ジャンプ）は countdown: false で出さない
+        function begin() {
+          counting = false;
+          playStart = performance.now();
+          if (!impl.delayTimer) startTimer();
+          try {
+            handle = impl.start(ctx);
+          } catch (err) {
+            console.error(err);
+            end('error', {});
+          }
+        }
+        if (impl.countdown === false) {
+          begin();
+        } else {
+          (function next(i) {
+            const steps = ['3', '2', '1', 'スタート！'];
+            if (ended) return;
+            if (i >= steps.length) { begin(); return; }
+            banner(steps[i], COUNT_MS);
+            timeouts.push(setTimeout(function () { next(i + 1); }, COUNT_MS));
+          })(0);
         }
       }
     });

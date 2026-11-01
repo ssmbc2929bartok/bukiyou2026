@@ -15,7 +15,9 @@
   const WINDOW = 1500;       // 跳ぶ時間のあと、押すのを待つ時間
   const FRIENDS = ['🐻', '🐰', '🐱', '🐶'];
 
+  // 毎回「3・2・1・ジャンプ！」と数えるので、ゲームの前の「3・2・1・スタート！」は出さない
   BKF.games.register('jump', {
+    countdown: false,
     start: function (ctx) {
       const W = ctx.width();
       const xs = [0.12, 0.31, 0.5, 0.69, 0.88].map(function (r) { return r * W; });
