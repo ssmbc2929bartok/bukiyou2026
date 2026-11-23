@@ -986,6 +986,11 @@
   font-size: 26px;
 }
 
+/* 押したときも まん中のまま沈める（.game-btn:active の transform が translateX(-50%) を上書きして、右に ずれていた。v2.7.2） */
+.jump-button:active {
+  transform: translateX(-50%) translateY(3px);
+}
+
 /* ---------- 跳ね返し ---------- */
 
 .case {

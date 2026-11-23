@@ -730,6 +730,38 @@
         ],
         finger: [[72, 99, 0], [52, 93, 0.2], [52, 87, 0.26, 'tap'], [60, 97, 0.44], [52, 87, 0.6, 'tap'], [72, 99, 0.84]],
       },
+      {
+        // 中級・上級だけ：数える速さが回ごとに変わる（js/games/jump.js の BEATS）。ゆっくりの回と、はやい回を見せる
+        caption: 'かぞえる はやさは まいかい かわるよ。わを よく みてね',
+        tiers: [1, 2],
+        dur: 6000,
+        parts: [
+          { html: '', cls: 'hd-jtarget', x: 50, y: 24 },
+          { html: '', cls: 'hd-jring', x: 50, y: 24, kf: [
+            { offset: 0, transform: 'scale(2.6)', opacity: 1 },
+            { offset: 0.5, transform: 'scale(1)', opacity: 1 },
+            { offset: 0.53, transform: 'scale(1)', opacity: 0 },
+            { offset: 0.61, transform: 'scale(2.6)', opacity: 0 },
+            { offset: 0.62, transform: 'scale(2.6)', opacity: 1 },
+            { offset: 0.8, transform: 'scale(1)', opacity: 1 },
+            { offset: 0.83, transform: 'scale(1)', opacity: 0 },
+            { offset: 1, transform: 'scale(1)', opacity: 0 },
+          ] },
+          { html: '3', cls: 'hd-count', x: 50, y: 24, kf: appear(0.02, 0.15) },
+          { html: '2', cls: 'hd-count', x: 50, y: 24, kf: appear(0.19, 0.31) },
+          { html: '1', cls: 'hd-count', x: 50, y: 24, kf: appear(0.35, 0.47) },
+          { html: 'ジャンプ！', cls: 'hd-count small', x: 50, y: 24, kf: appear(0.5, 0.57) },
+          { html: '3', cls: 'hd-count', x: 50, y: 24, kf: appear(0.62, 0.65) },
+          { html: '2', cls: 'hd-count', x: 50, y: 24, kf: appear(0.68, 0.71) },
+          { html: '1', cls: 'hd-count', x: 50, y: 24, kf: appear(0.74, 0.77) },
+          { html: 'ジャンプ！', cls: 'hd-count small', x: 50, y: 24, kf: appear(0.8, 0.95) },
+          { html: 'ゆっくり', cls: 'hd-pop', x: 82, y: 24, kf: appear(0.04, 0.5) },
+          { html: 'はやい！', cls: 'hd-pop bad', x: 82, y: 24, kf: appear(0.62, 0.95) },
+          { html: '🐰', size: 26, x: 26, y: 66, kf: move([[26, 66, 0], [26, 66, 0.5], [26, 50, 0.55], [26, 66, 0.62], [26, 66, 0.8], [26, 50, 0.85], [26, 66, 0.92], [26, 66, 1]]) },
+          { html: '🐥', size: 26, x: 50, y: 66, kf: move([[50, 66, 0], [50, 66, 0.5], [50, 50, 0.55], [50, 66, 0.62], [50, 66, 0.8], [50, 50, 0.85], [50, 66, 0.92], [50, 66, 1]]) },
+          { html: '🐱', size: 26, x: 74, y: 66, kf: move([[74, 66, 0], [74, 66, 0.5], [74, 50, 0.55], [74, 66, 0.62], [74, 66, 0.8], [74, 50, 0.85], [74, 66, 0.92], [74, 66, 1]]) },
+        ],
+      },
     ],
 
     bounce: [
