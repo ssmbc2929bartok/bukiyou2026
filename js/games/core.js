@@ -211,7 +211,8 @@
           timeouts.forEach(clearTimeout);
           const ms = Math.round(performance.now() - playStart);
           // 時間が終わるのと同時に ゲームオーバーになったら（ケースを まもれ で3回目が当たった など）、ゲームオーバーにする
-          if (reason === 'timeup' && m && m.over) reason = 'gameover';
+          // 目印は metrics.gameOver（v2.6.3。前は over で、温度キープの「行き過ぎた幅」の over と ぶつかっていた）
+          if (reason === 'timeup' && m && m.gameOver) reason = 'gameover';
           // クリアしたか・クリアまでの秒数
           let cleared = reason === 'done' || (reason === 'timeup' && def.endurance);
           if (m && m.cleared !== undefined && m.cleared !== null) cleared = Boolean(m.cleared);
