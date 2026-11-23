@@ -904,16 +904,76 @@
   color: #e76f51;
 }
 
+/* 数字は、目印の輪の まん中に出す（v2.7.0） */
 .jump-count {
   position: absolute;
   left: 0;
   right: 0;
-  top: 16%;
-  text-align: center;
+  top: 12%;
+  height: 116px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 64px;
   font-weight: 900;
   color: #1766b3;
   text-shadow: 0 4px 0 #fff;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.jump-count.word {
+  font-size: 24px;
+  color: #e63946;
+}
+
+/* 目印の輪（動かない）と、ちぢんで重なる輪。重なったときが「ジャンプ！」 */
+.jump-target,
+.jump-ring {
+  position: absolute;
+  left: 50%;
+  top: calc(12% + 58px);
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.jump-target {
+  border: 6px solid #fff;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 3px #8ecae6;
+}
+
+.jump-target.hit {
+  background: #fff3bf;
+  box-shadow: 0 0 0 6px #ffd166;
+}
+
+.jump-ring {
+  border: 6px solid #ef476f;
+  opacity: 0;
+}
+
+/* ぴったりの回数（★） */
+.jump-stars {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  text-align: center;
+  font-size: 26px;
+  letter-spacing: 4px;
+  color: #adb5bd;
+}
+
+.jump-stars .on {
+  color: #ffb703;
+}
+
+.jump-stars .off {
+  color: #ced4da;
 }
 
 .jump-button {
@@ -2300,6 +2360,47 @@
   font-size: 22px;
   font-weight: 900;
   opacity: 0;
+}
+
+.hd-count.small {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* みんなで ジャンプ：目印の輪・ちぢむ輪・★（v2.7.0） */
+.hd-jtarget,
+.hd-jring {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.hd-jtarget {
+  border: 3px solid #fff;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 0 2px #8ecae6;
+}
+
+.hd-jring {
+  border: 3px solid #ef476f;
+}
+
+.hd-jstars {
+  color: #adb5bd;
+  font-size: 16px;
+  letter-spacing: 3px;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.hd-jstars b {
+  color: #ffb703;
+  font-weight: normal;
+}
+
+.hd-jstars i {
+  color: #ced4da;
+  font-style: normal;
 }
 
 /* 動く説明があるときは、説明画面のアイコンを小さくする */

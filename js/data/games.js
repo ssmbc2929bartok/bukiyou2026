@@ -142,11 +142,13 @@
     },
     jump: {
       title: 'みんなで ジャンプ', company: '枚方信用金庫', icon: '🦘',
-      howto: '「ジャンプ！」で みんなと いっしょに ボタンを おそう！',
-      enabled: true, minTier: 0, time: null, timeNote: '3かい とんだら おわり',
+      howto: 'わが かさなったら「ジャンプ！」を おして、みんなと いっしょに とぼう！',
+      enabled: true, minTier: 0, time: null, timeNote: '5かい とんだら おわり',
+      strictClear: true,   // ぴったりが3回未満なら、最後の画面は「がんばったね！」
+      // v2.7.0 で作りなおした。おくれてくる仲間を待つ場面（waited）を なくしたので、ずれ（sync）の重みを −1 から −2 にした。
+      // “ふつう”の値は仮（輪が見えるぶん、前より合わせやすい）
       metrics: {
-        sync: { axis: { social: -1 }, base: same(300, 150) },
-        waited: { axis: { social: 2 }, base: same(0.5, 0.5) },
+        sync: { axis: { social: -2 }, base: same(250, 150) },
       },
     },
     bounce: {

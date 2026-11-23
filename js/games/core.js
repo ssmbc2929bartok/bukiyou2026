@@ -254,7 +254,9 @@
           function showDone() {
             $('game-play').hidden = true;
             $('game-done').hidden = false;
-            const tired = (reason === 'timeup' && !finished) || reason === 'gameover';
+            // strictClear のゲーム（みんなで ジャンプ）は、最後までやっても クリアでなければ「がんばったね！」
+            const tired = (reason === 'timeup' && !finished) || reason === 'gameover' ||
+              (reason === 'done' && !cleared && def.strictClear);
             $('game-done-emoji').textContent = tired ? '👏' : '🌟';
             $('game-done-text').textContent = reason === 'skip' ? 'つぎに いこう！' : tired ? 'がんばったね！' : 'すごい！';
             setTimeout(function () {
