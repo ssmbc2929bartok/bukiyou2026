@@ -2,7 +2,7 @@
  * クリーム作り（香椎化学工業）
  * お手本の色のクリームと同じ色になるように、材料のびん（色だけ）から2つ選んで混ぜる。3問。
  *   初級：あか・あお・きいろ / 中級：＋しろ / 上級：＋くろ
- *   上級の3問は、1回でできる問題が1つと、2回まぜる問題が2つ（順番はランダム）。
+ *   上級の3問は、1回でできる問題が2つと、2回まぜる問題が1つ（順番はランダム。v2.7.0 で2回まぜる問題を2つから1つに減らした）。
  *     3回まぜる問題は むずかしすぎたので出さない（v2.5.2）。見出しは「2かい いじょう」のまま
  *     （3回以上まぜて、べつの やり方で作れることも あるため）。
  *     2回まぜる問題は、2色をまぜたクリームに材料を1つ足す形で、材料は毎回ランダムに選ぶ
@@ -10,7 +10,7 @@
  *     暗すぎる色・しろに近すぎる色・材料の色そのままに近い色は、選びなおす。
  *   上級は、まぜたクリームを「パレット」に残す（5つまで。いっぱいなら古いものから入れかわる。問題がかわると空にする）。
  *   パレットのクリームは、びんと同じようにタップして、もう一度まぜられる（パレットどうしでもよい）。
- *   同じ問題で5回まちがえるたびに、ヒントを1つ出す（答えに使う色のびんを光らせて「ヒント：あかを つかうよ」）。
+ *   同じ問題で3回まちがえるたびに（v2.7.0。前は5回）、ヒントを1つ出す（答えに使う色のびんを光らせて「ヒント：あかを つかうよ」）。
  *   その問題で まだ まぜて いない色を先に教え、その中では使う量の多い色から教える（v2.5.1）。
  *   2回まぜる問題は、途中のまぜ（1回目）はまちがいに数えない。
  *   hints : 出したヒントの数（記録だけ）
@@ -39,7 +39,7 @@
   // いまは どの組み合わせも出す（2026-11-01 に見て決めた）
   const MUDDY = [];
   const PALETTE = 5;   // パレットに残せる数
-  const HINT_EVERY = 5; // 何回まちがえるたびにヒントを出すか
+  const HINT_EVERY = 3; // 何回まちがえるたびにヒントを出すか（v2.7.0 で 5 から 3 に）
   const NAMES = { R: 'あか', B: 'あお', Y: 'きいろ', W: 'しろ', K: 'くろ' };
 
   function key(a, b) { return [a, b].sort().join(''); }
@@ -77,7 +77,7 @@
           if (MUDDY.indexOf(key(mats[i], mats[j])) === -1) pairs.push([mats[i], mats[j]]);
         }
       }
-      // 問題を3つ。上級は、2問を「2回まぜる」問題にする
+      // 問題を3つ。上級は、1問を「2回まぜる」問題にする
       const questions = ctx.shuffle(pairs).slice(0, 3).map(function (p) {
         const recipe = mixRecipe(single(p[0]), single(p[1]));
         return { recipe: recipe, color: PAIR[key(p[0], p[1])], steps: 1 };
@@ -114,7 +114,6 @@
         const at = ctx.shuffle([0, 1, 2]);
         const others = questions.map(function (q) { return q.color; });
         questions[at[0]] = multi(2, others);
-        questions[at[1]] = multi(2, others.concat([questions[at[0]].color]));
       }
 
       const qLabel = ctx.el('div', 'cream-q');
@@ -263,7 +262,7 @@
             ctx.pop('ちがう いろだね', ctx.width() / 2, 140, 'bad');
           }
           ctx.after(500, function () { setBowl(mixing, null); });
-          // 5回まちがえるたびにヒント（途中のまぜは数えない）
+          // HINT_EVERY 回まちがえるたびにヒント（途中のまぜは数えない）
           const fails = triesNow - (q.steps - 1);
           if (fails > 0 && fails % HINT_EVERY === 0) ctx.after(900, function () { giveHint(q); });
           busy = false;
