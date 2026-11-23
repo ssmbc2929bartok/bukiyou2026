@@ -2,7 +2,10 @@
  * 回路（ノボル電機）
  * 同じ色の点どうしを、指でなぞってつなぐ。線は交差できない（ぶつかったらその線は消える）。
  * 全部つながるとスピーカーから音の波が出る（音は出さない）。問題は js/data/circuit.js から選ぶ。
- *   redraws : 引き直した回数（ぶつかって消えた・もう一度引き直した）→ チャレンジ（＋）・かんがえる（−）
+ * 盤の下の「1つ もどす」で、さいごに引いた線を消せる（v2.7.0。やりなおせることが分かるように）。
+ * ほかに、点をもう一度なぞると その色を引き直せ、来た道をもどると線が短くなる。
+ *   redraws : 引き直した回数（ぶつかって消えた・もう一度引き直した・「1つ もどす」で消した）→ チャレンジ（＋）・かんがえる（−）
+ *   undos   : 「1つ もどす」を押して線を消した回数（記録だけ）
  *   solved  : 全部つなげたら 1 → かんがえる（＋）
  */
 (function (root) {
@@ -16,7 +19,7 @@
       const n = puzzle.n;
       const W = ctx.width();
       const H = ctx.height();
-      const size = Math.floor(Math.min(W - 24, H - 80) / n);
+      const size = Math.floor(Math.min(W - 24, H - 146) / n);   // 上にスピーカー、下に「1つ もどす」ボタン
       const speaker = ctx.el('div', 'circuit-speaker', null, '🔈');
       const board = ctx.el('div', 'circuit-board');
       board.style.width = (size * n) + 'px';
@@ -38,7 +41,27 @@
       const done = puzzle.pairs.map(function () { return false; });
       let active = null;    // なぞっている色
       let redraws = 0;
+      let undos = 0;
       let finished = false;
+      let order = [];       // 線を引いた順（色の番号）。「1つ もどす」は、さいごのものを消す
+
+      // 「1つ もどす」：さいごに引いた線を消す
+      const undo = ctx.el('button', 'game-btn sub circuit-undo', null, '↩ 1つ もどす');
+      undo.type = 'button';
+      function showUndo() {
+        undo.disabled = finished || order.length === 0;
+      }
+      ctx.on(undo, 'click', function () {
+        if (finished || active !== null || order.length === 0) return;
+        const color = order.pop();
+        paths[color] = null;
+        done[color] = false;
+        undos++;
+        redraws++;
+        showUndo();
+        draw();
+      });
+      showUndo();
 
       function cellAt(e) {
         const r = board.getBoundingClientRect();
@@ -91,6 +114,8 @@
       }
 
       function crash(at) {
+        order = order.filter(function (c) { return c !== active; });
+        showUndo();
         paths[active] = null;
         done[active] = false;
         active = null;
@@ -111,6 +136,9 @@
         paths[color] = [cell];
         done[color] = false;
         active = color;
+        order = order.filter(function (c) { return c !== color; });
+        order.push(color);
+        showUndo();
         ctx.stage.setPointerCapture && ctx.stage.setPointerCapture(e.pointerId);
         draw();
       });
@@ -134,6 +162,7 @@
           active = null;
           if (done.every(Boolean)) {
             finished = true;
+            showUndo();
             speaker.textContent = '🔊 ♪ ♫';
             speaker.classList.add('on');
             ctx.clear();
@@ -170,6 +199,7 @@
       function metrics() {
         return {
           redraws: redraws,
+          undos: undos,
           solved: done.every(Boolean) ? 1 : 0,
           connected: done.filter(Boolean).length,
           puzzle: BKF.circuitPuzzles[ctx.tier].indexOf(puzzle),

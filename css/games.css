@@ -662,6 +662,26 @@
   font-size: 34px;
 }
 
+/* 「1つ もどす」：さいごに引いた線を消す（v2.7.0） */
+.circuit-undo {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  min-height: 48px;
+  padding: 0 22px;
+  white-space: nowrap;
+}
+
+.circuit-undo:active {
+  transform: translateX(-50%) translateY(3px);
+}
+
+.circuit-undo:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .circuit-speaker.on {
   animation: speaker 0.4s ease-in-out infinite alternate;
 }
@@ -1864,6 +1884,15 @@
 .hd-btn.wide {
   padding: 6px 22px;
   font-size: 13px;
+}
+
+/* かいろの「1つ もどす」（ゲームの白いボタンに にせる） */
+.hd-btn.undo {
+  border: 2px solid #cfe3f5;
+  background: #fff;
+  box-shadow: 0 2px 0 #cfe3f5;
+  color: #1766b3;
+  white-space: nowrap;
 }
 
 .hd-bowl {
