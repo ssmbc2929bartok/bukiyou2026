@@ -353,14 +353,17 @@ h1[tabindex="-1"]:focus {
   padding-top: 28px;
 }
 
+/* 「不器用ファクトリー × 大阪工業大学」（v2.7.0）。せまい画面でも1行に収まるよう、字の大きさを画面の幅に合わせる */
 .top-event {
   display: inline-block;
-  padding: 6px 18px;
+  max-width: 100%;
+  padding: 6px 16px;
   border-radius: 999px;
   background: #5b4636;
   color: #fff;
-  font-size: 15px;
-  letter-spacing: 0.1em;
+  font-size: clamp(11px, 3.6vw, 15px);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
 }
 
 .top-icons {
